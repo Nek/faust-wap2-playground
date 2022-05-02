@@ -351,7 +351,7 @@ function heap2Str(buf) {
   return str
 }
 
-export default async function loadPlugin(context, url) {
+export default async function loadPlugin(context: AudioContext, url: string) {
   let fWorkletProcessors = []
 
   try {
@@ -438,6 +438,7 @@ export default async function loadPlugin(context, url) {
     const dspModule = await WebAssembly.compile(dspBuffer)
     const dspInstance = await WebAssembly.instantiate(dspModule, importObject)
 
+    // @ts-ignore
     let HEAPU8 = new Uint8Array(dspInstance.exports.memory.buffer)
     let json = heap2Str(HEAPU8)
     let json_object = JSON.parse(json)
