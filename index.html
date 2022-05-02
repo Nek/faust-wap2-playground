@@ -32,6 +32,7 @@
     beatAnalyser.fftSize = FFT_SIZE
 
     loadPlugin(ctx, pluginURL).then((node) => {
+      console.log(node.getDescriptor())
       node.connect(splitter)
       node.connect(analyser)
       splitter.connect(beatAnalyser, 2, 0)

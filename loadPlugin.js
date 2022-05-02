@@ -330,7 +330,6 @@ function heap2Str(buf) {
 
 export default async function loadPlugin(context, baseURL = "") {
     let fWorkletProcessors = []
-    let pathTable = [];
 
     try {
         const importObject = {
@@ -440,7 +439,7 @@ export default async function loadPlugin(context, baseURL = "") {
                 processorOptions: options
             });
         node.onprocessorerror = () => { console.log('An error from melody-processor was detected.'); }
-        return (node);
+        return node;
     } catch (e) {
         console.error(e);
         console.error("Faust " + name + " cannot be loaded or compiled");
