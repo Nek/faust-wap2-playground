@@ -4,7 +4,8 @@
   "scripts": {
     "start": "vite --open",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "compile": "faust2wasm melody.dsp -worklet -opt && rm melody.js melody-processor.js && mv melody.wasm assets"
   },
   "browser": {
     "process": false,
