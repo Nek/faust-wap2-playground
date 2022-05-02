@@ -17,8 +17,8 @@
   </body>
   <script type="module">
     import melody from "./melody.js";
-    import Oscilloscope from "./oscilloscope.js";
     import spectrometer from "./spectrometer.js"
+    import oscilloscope from "./oscilloscope.js";
 
     var ctx = new AudioContext();
 
@@ -30,12 +30,16 @@
     var splitter = ctx.createChannelSplitter(3);
     var analyser = ctx.createAnalyser();
     analyser.fftSize = FFT_SIZE;
+    var beatAnalyser = ctx.createAnalyser();
+    beatAnalyser.fftSize = FFT_SIZE;
 
     plugin.load().then((node) => {
       node.connect(splitter);
       node.connect(analyser);
+      splitter.connect(beatAnalyser, 2, 0)
       node.connect(ctx.destination);
       spectrometer(analyser, document.getElementById("spectrum"))
+      oscilloscope(beatAnalyser, document.getElementById("oscilloscope"))
     });
   </script>
 </html>
