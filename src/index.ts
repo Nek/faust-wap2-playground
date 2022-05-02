@@ -11,9 +11,11 @@ function loadPluginAndStartVis() {
   loadPlugin(ctx, "./melody.wasm").then((node) => {
     if (node) {
       console.log(node)
-      node.setOutputParamHandler((path: string, value: number | undefined) =>
-        console.log(path, value)
-      )
+      node.setOutputParamHandler((path: string, value: number | undefined) => {
+        if (path === "/melody/output/kick-beat") {
+          (document.getElementById("kick") as HTMLInputElement).checked = (value ?? 0) > 0 ? true : false
+        }
+      })
       node.connect(analyser)
       node.connect(ctx.destination)
       spectrometer(
@@ -28,7 +30,7 @@ function loadPluginAndStartVis() {
       slider(
         document.getElementById("bpm")! as HTMLInputElement,
         (value: number) => node.setParamValue("/melody/input/bpm", value),
-        {min: 30, max: 180, step: 1, init: 120}
+        { min: 30, max: 180, step: 1, init: 120 }
       )
     }
   })
