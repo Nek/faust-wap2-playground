@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <meta
+    http-equiv="Cache-Control"
+    content="no-cache, no-store, must-revalidate"
+  />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <head>
+    <title>Host that loads a plugin with its GUI</title>
+  </head>
+  <body>
+    <canvas width="600" height="300" id="spectrum"></canvas>
+    <canvas width="600" height="300" id="oscilloscope"></canvas>
+
+  </body>
+  <script type="module">
+    import melody from "./melody.js";
+    import Oscilloscope from "./oscilloscope.js";
+    import spectrometer from "./spectrometer.js"
+
+    var ctx = new AudioContext();
+
+    var pluginURL = ".";
+    var plugin = new melody(ctx, pluginURL);
+
+    const FFT_SIZE = 1024
+    
+    var splitter = ctx.createChannelSplitter(3);
+    var analyser = ctx.createAnalyser();
+    analyser.fftSize = FFT_SIZE;
+
+    plugin.load().then((node) => {
+      node.connect(splitter);
+      node.connect(analyser);
+      node.connect(ctx.destination);
+      spectrometer(analyser, document.getElementById("spectrum"))
+    });
+  </script>
+</html>
