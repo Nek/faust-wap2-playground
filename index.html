@@ -26,17 +26,14 @@
     var splitter = ctx.createChannelSplitter(3)
     var analyser = ctx.createAnalyser()
     analyser.fftSize = FFT_SIZE
-    var beatAnalyser = ctx.createAnalyser()
-    beatAnalyser.fftSize = FFT_SIZE
 
     loadPlugin(ctx, "./melody.wasm").then((node) => {
-      console.log(node.getDescriptor())
+      node.setOutputParamHandler((path, value) => console.log(path, value))
       node.connect(splitter)
       node.connect(analyser)
-      splitter.connect(beatAnalyser, 2, 0)
       node.connect(ctx.destination)
       spectrometer(analyser, document.getElementById("spectrum"))
-      oscilloscope(beatAnalyser, document.getElementById("oscilloscope"))
+      oscilloscope(analyser, document.getElementById("oscilloscope"))
     })
   </script>
 </html>

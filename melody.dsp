@@ -10,7 +10,7 @@ djembeBeat = ba.beat(bpm*4);
 arp = (os.lf_saw(ba.tempo(bpm*4))+1)/2 * 4000 : ba.sAndH(djembeBeat) : qu.quantize(440, qu.penta);
 djembe = djembeBeat : pm.djembe(arp, 0, 1, 1) : ch(0.5, 0.8);
 
-kickBeat = ba.beat(bpm);
+kickBeat = ba.beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("kick-beat", 0, 1));
 kick = kickBeat : sy.kick(60, 0, 0.0001, 0.5, 10) : ch(0.5, 1);
 
 hatBeat = ba.beat(bpm)@ba.tempo(bpm*2);
@@ -23,4 +23,4 @@ string = stringBeat : sy.combString(stringArp, 0.5)*0.5 : fi.lowpass(2, 1000) : 
 
 reverb(s, volume) = s : re.jpverb(1, 0, 0.5, 0.707, 0.1, 2, 1, 1, 1, 500, 2000) : par(i,2, _ * volume);
 
-process =  vgroup("melody", (djembe, reverb(djembe, 0.3) , kick, hat, string, reverb(string, 0.7) :> _, _, attach(_,abs : ba.linear2db : hbargraph("beat",-60,0))));
+process = (djembe, reverb(djembe, 0.3) , kick, hat, string, reverb(string, 0.7) :> _, _);
