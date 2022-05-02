@@ -29,13 +29,6 @@ function loadPluginAndStartVis() {
 
 let ctx = loadPluginAndStartVis()
 
-if (import.meta.hot) {
-  import.meta.hot.on("dsp-update", () => {
-    ctx.close()
-    ctx = loadPluginAndStartVis()
-  })
-}
-
 const unlockAudioContext = (ctx: AudioContext) => {
   if (ctx.state !== "suspended") return
   const b = document.body
@@ -47,3 +40,11 @@ const unlockAudioContext = (ctx: AudioContext) => {
 }
 
 unlockAudioContext(ctx)
+
+// Hot reload when DSP updates! This code is removed in production
+if (import.meta.hot) {
+  import.meta.hot.on("dsp-update", () => {
+    ctx.close()
+    ctx = loadPluginAndStartVis()
+  })
+}

@@ -2,7 +2,7 @@ declare name "  ";
 
 import("stdfaust.lib");
 
-bpm = hslider("BPM", 128, 30, 180, 0.1);
+bpm = hslider("BPM", 118, 30, 180, 0.1);
 
 ch(p, v, s) = s*v : sp.panner(p);
 

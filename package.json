@@ -5,8 +5,7 @@
     "compile" : "dsp/melody.dsp"
   },
   "scripts": {
-    "watch": "npm-watch",
-    "start": "vite --open",
+    "start": "vite --open & npm-watch",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "compile": "faust2wasm dsp/melody.dsp -worklet -opt && rm melody.js melody-processor.js && mv melody.wasm assets"
