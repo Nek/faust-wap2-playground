@@ -70,8 +70,6 @@ class Wap2AudioWorkletNode extends AudioWorkletNode {
                 get_name = get_name.replace(/\/./g, (x) => { return x.substr(1, 1).toUpperCase(); });
                 obj[set_name] = (val) => { obj.setParamValue(item.address, val); };
                 obj[get_name] = () => { return obj.getParamValue(item.address); };
-                //console.log(set_name);
-                //console.log(get_name);
             }
         }
 
