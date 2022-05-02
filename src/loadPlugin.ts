@@ -342,7 +342,7 @@ let processorStringTemplate = `
     }
 `
 
-function heap2Str(buf) {
+function heap2Str(buf: Uint8Array) {
   let str = ""
   let i = 0
   while (buf[i] !== 0) {
@@ -352,7 +352,7 @@ function heap2Str(buf) {
 }
 
 export default async function loadPlugin(context: AudioContext, url: string) {
-  let fWorkletProcessors = []
+  let fWorkletProcessors: string[] = []
 
   try {
     const importObject = {
@@ -370,12 +370,12 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         _cosf: Math.cos,
         _expf: Math.exp,
         _floorf: Math.floor,
-        _fmodf: (x, y) => x % y,
+        _fmodf: (x: number, y: number) => x % y,
         _logf: Math.log,
         _log10f: Math.log10,
         _max_f: Math.max,
         _min_f: Math.min,
-        _remainderf: (x, y) => x - Math.round(x / y) * y,
+        _remainderf: (x:number, y:number) => x - Math.round(x / y) * y,
         _powf: Math.pow,
         _roundf: Math.fround,
         _sinf: Math.sin,
@@ -388,10 +388,10 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         _sinhf: Math.sinh,
         _tanhf: Math.tanh,
         _isnanf: Number.isNaN,
-        _isinff: function (x) {
+        _isinff: function (x: number) {
           return !isFinite(x)
         },
-        _copysignf: function (x, y) {
+        _copysignf: function (x: number, y: number) {
           return Math.sign(x) === Math.sign(y) ? x : -x
         },
 
@@ -404,12 +404,12 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         _cos: Math.cos,
         _exp: Math.exp,
         _floor: Math.floor,
-        _fmod: (x, y) => x % y,
+        _fmod: (x: number, y: number) => x % y,
         _log: Math.log,
         _log10: Math.log10,
         _max_: Math.max,
         _min_: Math.min,
-        _remainder: (x, y) => x - Math.round(x / y) * y,
+        _remainder: (x: number, y: number) => x - Math.round(x / y) * y,
         _pow: Math.pow,
         _round: Math.fround,
         _sin: Math.sin,
@@ -422,10 +422,10 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         _sinh: Math.sinh,
         _tanh: Math.tanh,
         _isnan: Number.isNaN,
-        _isinf: function (x) {
+        _isinf: function (x: number) {
           return !isFinite(x)
         },
-        _copysign: function (x, y) {
+        _copysign: function (x: number, y: number) {
           return Math.sign(x) === Math.sign(y) ? x : -x
         },
 
@@ -444,7 +444,7 @@ export default async function loadPlugin(context: AudioContext, url: string) {
     let json_object = JSON.parse(json)
     let options = { wasm_module: dspModule, json: json }
 
-    if (fWorkletProcessors.indexOf(name) === -1) {
+    if (fWorkletProcessors.indexOf(url) === -1) {
       try {
         let re = /JSON_STR/g
         let processorString = processorStringTemplate.replace(re, json)
@@ -453,11 +453,11 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         )
         await context.audioWorklet.addModule(real_url)
         // Keep the DSP name
-        console.log("Keep the DSP name")
-        fWorkletProcessors.push(name)
+        console.log("Keep the DSP url")
+        fWorkletProcessors.push(url)
       } catch (e) {
         console.error(e)
-        console.error("Faust " + name + " cannot be loaded or compiled")
+        console.error("Faust " + url + " cannot be loaded or compiled")
         return null
       }
     }
@@ -476,7 +476,7 @@ export default async function loadPlugin(context: AudioContext, url: string) {
     return node
   } catch (e) {
     console.error(e)
-    console.error("Faust " + name + " cannot be loaded or compiled")
+    console.error("Faust " + url + " cannot be loaded or compiled")
     return null
   }
 }

@@ -11,10 +11,14 @@ var analyser = ctx.createAnalyser()
 analyser.fftSize = FFT_SIZE
 
 loadPlugin(ctx, "./melody.wasm").then((node) => {
-  node.setOutputParamHandler((path, value) => console.log(path, value))
-  node.connect(splitter)
-  node.connect(analyser)
-  node.connect(ctx.destination)
-  spectrometer(analyser, document.getElementById("spectrum"))
-  oscilloscope(analyser, document.getElementById("oscilloscope"))
+  if (node) {
+    node.setOutputParamHandler((path: string, value: number | undefined) =>
+      console.log(path, value)
+    )
+    node.connect(splitter)
+    node.connect(analyser)
+    node.connect(ctx.destination)
+    spectrometer(analyser, document.getElementById("spectrum") as HTMLCanvasElement)
+    oscilloscope(analyser, document.getElementById("oscilloscope") as HTMLCanvasElement)
+  }
 })

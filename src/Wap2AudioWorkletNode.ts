@@ -1,3 +1,15 @@
+
+type Wap2AudioWorkletNodeOptions = {
+  numberOfInputs: number,
+  numberOfOutputs: number,
+  channelCount: number,
+  outputChannelCount: number[],
+  channelCountMode: "max" | "clamped-max" | "explicit",
+  channelInterpretation: "speakers" | "discrete",
+  processorOptions: {json: string}, 
+}
+
+type fCtrlLabel = {min: number, max: number, path: string}
 export default class Wap2AudioWorkletNode extends AudioWorkletNode {
   baseURL: string
   json: string
@@ -6,16 +18,16 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
   parse_group: (group: any, obj: any) => void
   parse_items: (items: any, obj: any) => void
   parse_item: (item: any, obj: any) => void
-  output_handler: (path: string, value: number) => void
+  output_handler: ((path: string, value: number | undefined) => void) | null
   inputs_items: any[]
   outputs_items: any[]
   descriptor: any[]
   fPitchwheelLabel: any[]
-  fCtrlLabel: any[]
+  fCtrlLabel: (fCtrlLabel[] | null)[] = []
   gui: any
   presets: any
 
-  constructor(context, baseURL, options) {
+  constructor(context: AudioContext, baseURL: string, options: Wap2AudioWorkletNodeOptions) {
     super(context, "processor", options)
 
     this.baseURL = baseURL
@@ -92,7 +104,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
         get_name = get_name.replace(/\/./g, (x) => {
           return x.substr(1, 1).toUpperCase()
         })
-        obj[set_name] = (val) => {
+        obj[set_name] = (val: number) => {
           obj.setParamValue(item.address, val)
         }
         obj[get_name] = () => {
@@ -112,7 +124,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
     this.fPitchwheelLabel = []
     this.fCtrlLabel = new Array(128)
     for (var i = 0; i < this.fCtrlLabel.length; i++) {
-      this.fCtrlLabel[i] = []
+      this.fCtrlLabel[i] = null
     }
 
     // Parse UI
@@ -127,7 +139,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
   }
 
   // To be called by the message port with messages coming from the processor
-  handleMessage(event) {
+  handleMessage(event: {data: {path: string, value: number}}) {
     var msg = event.data
     if (this.output_handler) {
       this.output_handler(msg.path, msg.value)
@@ -161,15 +173,15 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * @param path - a path to the control
    * @param val - the value to be set
    */
-  setParamValue(path, val) {
+  setParamValue(path: string, val: number) {
     // Needed for sample accurate control
-    this.parameters.get(path).setValueAtTime(val, 0)
+    this.parameters.get(path)?.setValueAtTime(val, 0)
   }
 
   // For WAP
-  setParam(path, val) {
+  setParam(path: string, val: number) {
     // Needed for sample accurate control
-    this.parameters.get(path).setValueAtTime(val, 0)
+    this.parameters.get(path)?.setValueAtTime(val, 0)
   }
 
   /**
@@ -178,12 +190,12 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * @return the current control value
    */
   getParamValue(path: string) {
-    return this.parameters.get(path).value
+    return this.parameters.get(path)?.value
   }
 
   // For WAP
-  getParam(path) {
-    return this.parameters.get(path).value
+  getParam(path: string) {
+    return this.parameters.get(path)?.value
   }
 
   /**
@@ -193,7 +205,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    *
    * @param handler - a function of type function(path, value)
    */
-  setOutputParamHandler(handler) {
+  setOutputParamHandler(handler: (path: string, value: number | undefined) => void) {
     this.output_handler = handler
   }
 
@@ -258,17 +270,18 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * @param value - the MIDI controller value (0..127)
    */
   ctrlChange(channel: number, ctrl: number, value: number) {
-    if (this.fCtrlLabel[ctrl] !== []) {
-      for (var i = 0; i < this.fCtrlLabel[ctrl].length; i++) {
-        const path = this.fCtrlLabel[ctrl][i].path
+    const ctrlLabel = this.fCtrlLabel[ctrl]
+    if (ctrlLabel !== null && Array.isArray(ctrlLabel)) {
+      for (let i = 0; i < ctrlLabel.length; i++) {
+        const path = ctrlLabel[i].path
         this.setParamValue(
           path,
           Wap2AudioWorkletNode.remap(
             value,
             0,
             127,
-            this.fCtrlLabel[ctrl][i].min,
-            this.fCtrlLabel[ctrl][i].max
+            ctrlLabel[i].min,
+            ctrlLabel[i].max
           )
         )
         if (this.output_handler) {
@@ -284,7 +297,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * @param channel - the MIDI channel (0..15, not used for now)
    * @param value - the MIDI controller value (0..16383)
    */
-  pitchWheel(channel, wheel) {
+  pitchWheel(channel: number, wheel: number) {
     for (var i = 0; i < this.fPitchwheelLabel.length; i++) {
       var pw = this.fPitchwheelLabel[i]
       this.setParamValue(
@@ -300,7 +313,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
   /**
    * Generic MIDI message handler.
    */
-  midiMessage(data) {
+  midiMessage(data: [number, number, number, number]) {
     var cmd = data[0] >> 4
     var channel = data[0] & 0xf
     var data1 = data[1]
@@ -316,7 +329,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
   }
 
   // For WAP
-  onMidi(data) {
+  onMidi(data: [number, number, number, number]) {
     this.midiMessage(data)
   }
 
@@ -339,7 +352,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * Sets each params with the value indicated in the state object
    * @param {Object} state
    */
-  async setState(state) {
+  async setState(state: any) {
     return new Promise((resolve) => {
       for (const param in state) {
         if (state.hasOwnProperty(param)) this.setParam(param, state[param])
@@ -357,11 +370,11 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * A different call closer to the preset management
    * @param {Object} patch to assign as a preset to the node
    */
-  setPatch(patch) {
+  setPatch(patch: any) {
     this.setState(this.presets[patch])
   }
 
-  static remap(v, mn0, mx0, mn1, mx1) {
+  static remap(v: number, mn0: number, mx0: number, mn1: number, mx1: number) {
     return ((1.0 * (v - mn0)) / (mx0 - mn0)) * (mx1 - mn1) + mn1
   }
 }
