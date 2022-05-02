@@ -340,131 +340,142 @@ let processorStringTemplate = `
     } catch (error) {
         console.warn(error);
     }
-`;
+`
 
 function heap2Str(buf) {
-    let str = "";
-    let i = 0;
-    while (buf[i] !== 0) {
-        str += String.fromCharCode(buf[i++]);
-    }
-    return str;
-}   
+  let str = ""
+  let i = 0
+  while (buf[i] !== 0) {
+    str += String.fromCharCode(buf[i++])
+  }
+  return str
+}
 
 export default async function loadPlugin(context, url) {
-    let fWorkletProcessors = []
+  let fWorkletProcessors = []
 
-    try {
-        const importObject = {
-            env: {
-                memoryBase: 0,
-                tableBase: 0,
-                _abs: Math.abs,
+  try {
+    const importObject = {
+      env: {
+        memoryBase: 0,
+        tableBase: 0,
+        _abs: Math.abs,
 
-                // Float version
-                _acosf: Math.acos,
-                _asinf: Math.asin,
-                _atanf: Math.atan,
-                _atan2f: Math.atan2,
-                _ceilf: Math.ceil,
-                _cosf: Math.cos,
-                _expf: Math.exp,
-                _floorf: Math.floor,
-                _fmodf: (x, y) => x % y,
-                _logf: Math.log,
-                _log10f: Math.log10,
-                _max_f: Math.max,
-                _min_f: Math.min,
-                _remainderf: (x, y) => x - Math.round(x / y) * y,
-                _powf: Math.pow,
-                _roundf: Math.fround,
-                _sinf: Math.sin,
-                _sqrtf: Math.sqrt,
-                _tanf: Math.tan,
-                _acoshf: Math.acosh,
-                _asinhf: Math.asinh,
-                _atanhf: Math.atanh,
-                _coshf: Math.cosh,
-                _sinhf: Math.sinh,
-                _tanhf: Math.tanh,
-                _isnanf: Number.isNaN,
-                _isinff: function (x) { return !isFinite(x); },
-                _copysignf: function (x, y) { return Math.sign(x) === Math.sign(y) ? x : -x; },
+        // Float version
+        _acosf: Math.acos,
+        _asinf: Math.asin,
+        _atanf: Math.atan,
+        _atan2f: Math.atan2,
+        _ceilf: Math.ceil,
+        _cosf: Math.cos,
+        _expf: Math.exp,
+        _floorf: Math.floor,
+        _fmodf: (x, y) => x % y,
+        _logf: Math.log,
+        _log10f: Math.log10,
+        _max_f: Math.max,
+        _min_f: Math.min,
+        _remainderf: (x, y) => x - Math.round(x / y) * y,
+        _powf: Math.pow,
+        _roundf: Math.fround,
+        _sinf: Math.sin,
+        _sqrtf: Math.sqrt,
+        _tanf: Math.tan,
+        _acoshf: Math.acosh,
+        _asinhf: Math.asinh,
+        _atanhf: Math.atanh,
+        _coshf: Math.cosh,
+        _sinhf: Math.sinh,
+        _tanhf: Math.tanh,
+        _isnanf: Number.isNaN,
+        _isinff: function (x) {
+          return !isFinite(x)
+        },
+        _copysignf: function (x, y) {
+          return Math.sign(x) === Math.sign(y) ? x : -x
+        },
 
-                // Double version
-                _acos: Math.acos,
-                _asin: Math.asin,
-                _atan: Math.atan,
-                _atan2: Math.atan2,
-                _ceil: Math.ceil,
-                _cos: Math.cos,
-                _exp: Math.exp,
-                _floor: Math.floor,
-                _fmod: (x, y) => x % y,
-                _log: Math.log,
-                _log10: Math.log10,
-                _max_: Math.max,
-                _min_: Math.min,
-                _remainder: (x, y) => x - Math.round(x / y) * y,
-                _pow: Math.pow,
-                _round: Math.fround,
-                _sin: Math.sin,
-                _sqrt: Math.sqrt,
-                _tan: Math.tan,
-                _acosh: Math.acosh,
-                _asinh: Math.asinh,
-                _atanh: Math.atanh,
-                _cosh: Math.cosh,
-                _sinh: Math.sinh,
-                _tanh: Math.tanh,
-                _isnan: Number.isNaN,
-                _isinf: function (x) { return !isFinite(x); },
-                _copysign: function (x, y) { return Math.sign(x) === Math.sign(y) ? x : -x; },
+        // Double version
+        _acos: Math.acos,
+        _asin: Math.asin,
+        _atan: Math.atan,
+        _atan2: Math.atan2,
+        _ceil: Math.ceil,
+        _cos: Math.cos,
+        _exp: Math.exp,
+        _floor: Math.floor,
+        _fmod: (x, y) => x % y,
+        _log: Math.log,
+        _log10: Math.log10,
+        _max_: Math.max,
+        _min_: Math.min,
+        _remainder: (x, y) => x - Math.round(x / y) * y,
+        _pow: Math.pow,
+        _round: Math.fround,
+        _sin: Math.sin,
+        _sqrt: Math.sqrt,
+        _tan: Math.tan,
+        _acosh: Math.acosh,
+        _asinh: Math.asinh,
+        _atanh: Math.atanh,
+        _cosh: Math.cosh,
+        _sinh: Math.sinh,
+        _tanh: Math.tanh,
+        _isnan: Number.isNaN,
+        _isinf: function (x) {
+          return !isFinite(x)
+        },
+        _copysign: function (x, y) {
+          return Math.sign(x) === Math.sign(y) ? x : -x
+        },
 
-                table: new WebAssembly.Table({ initial: 0, element: "anyfunc" })
-            }
-        };
-
-        const dspFile = await fetch(url);
-        const dspBuffer = await dspFile.arrayBuffer();
-        const dspModule = await WebAssembly.compile(dspBuffer);
-        const dspInstance = await WebAssembly.instantiate(dspModule, importObject);
-
-        let HEAPU8 = new Uint8Array(dspInstance.exports.memory.buffer);
-        let json = heap2Str(HEAPU8);
-        let json_object = JSON.parse(json);
-        let options = { wasm_module: dspModule, json: json };
-
-        if (fWorkletProcessors.indexOf(name) === -1) {
-            try {
-                let re = /JSON_STR/g;
-                let processorString = processorStringTemplate.replace(re, json);
-                let real_url = window.URL.createObjectURL(new Blob([processorString], { type: 'text/javascript' }));
-                await context.audioWorklet.addModule(real_url);
-                // Keep the DSP name
-                console.log("Keep the DSP name");
-                fWorkletProcessors.push(name);
-            } catch (e) {
-                console.error(e);
-                console.error("Faust " + name + " cannot be loaded or compiled");
-                return null;
-            }
-        }
-        let node = new Wap2AudioWorkletNode(context, url,
-            {
-                numberOfInputs: (parseInt(json_object.inputs) > 0) ? 1 : 0,
-                numberOfOutputs: (parseInt(json_object.outputs) > 0) ? 1 : 0,
-                channelCount: Math.max(1, parseInt(json_object.inputs)),
-                outputChannelCount: [parseInt(json_object.outputs)],
-                channelCountMode: "explicit",
-                channelInterpretation: "speakers",
-                processorOptions: options
-            });
-        node.onprocessorerror = () => { console.log('An error from melody-processor was detected.'); }
-        return node;
-    } catch (e) {
-        console.error(e);
-        console.error("Faust " + name + " cannot be loaded or compiled");
-        return null;
+        table: new WebAssembly.Table({ initial: 0, element: "anyfunc" })
+      }
     }
+
+    const dspFile = await fetch(url)
+    const dspBuffer = await dspFile.arrayBuffer()
+    const dspModule = await WebAssembly.compile(dspBuffer)
+    const dspInstance = await WebAssembly.instantiate(dspModule, importObject)
+
+    let HEAPU8 = new Uint8Array(dspInstance.exports.memory.buffer)
+    let json = heap2Str(HEAPU8)
+    let json_object = JSON.parse(json)
+    let options = { wasm_module: dspModule, json: json }
+
+    if (fWorkletProcessors.indexOf(name) === -1) {
+      try {
+        let re = /JSON_STR/g
+        let processorString = processorStringTemplate.replace(re, json)
+        let real_url = window.URL.createObjectURL(
+          new Blob([processorString], { type: "text/javascript" })
+        )
+        await context.audioWorklet.addModule(real_url)
+        // Keep the DSP name
+        console.log("Keep the DSP name")
+        fWorkletProcessors.push(name)
+      } catch (e) {
+        console.error(e)
+        console.error("Faust " + name + " cannot be loaded or compiled")
+        return null
+      }
+    }
+    let node = new Wap2AudioWorkletNode(context, url, {
+      numberOfInputs: parseInt(json_object.inputs) > 0 ? 1 : 0,
+      numberOfOutputs: parseInt(json_object.outputs) > 0 ? 1 : 0,
+      channelCount: Math.max(1, parseInt(json_object.inputs)),
+      outputChannelCount: [parseInt(json_object.outputs)],
+      channelCountMode: "explicit",
+      channelInterpretation: "speakers",
+      processorOptions: options
+    })
+    node.onprocessorerror = () => {
+      console.log("An error from melody-processor was detected.")
+    }
+    return node
+  } catch (e) {
+    console.error(e)
+    console.error("Faust " + name + " cannot be loaded or compiled")
+    return null
+  }
 }

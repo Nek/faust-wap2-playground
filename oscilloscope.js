@@ -3,7 +3,13 @@ export default function oscilloscope(analyser, canvas) {
   let timeDomain = new Uint8Array(analyser.fftSize)
 
   // draw signal
-  const draw = (ctx, x0 = 0, y0 = 0, width = ctx.canvas.width - x0, height = ctx.canvas.height - y0) => {
+  const draw = (
+    ctx,
+    x0 = 0,
+    y0 = 0,
+    width = ctx.canvas.width - x0,
+    height = ctx.canvas.height - y0
+  ) => {
     analyser.getByteTimeDomainData(timeDomain)
     const step = width / timeDomain.length
 
@@ -11,8 +17,8 @@ export default function oscilloscope(analyser, canvas) {
     // drawing loop (skipping every second record)
     for (let i = 0; i < timeDomain.length; i += 2) {
       const percent = timeDomain[i] / 256
-      const x = x0 + (i * step)
-      const y = y0 + (height * percent)
+      const x = x0 + i * step
+      const y = y0 + height * percent
       ctx.lineTo(x, y)
     }
 
@@ -25,5 +31,4 @@ export default function oscilloscope(analyser, canvas) {
     requestAnimationFrame(loop)
   }
   loop()
-
 }
