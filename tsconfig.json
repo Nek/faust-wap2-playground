@@ -26,5 +26,6 @@
     "resolveJsonModule": true,
     "useDefineForClassFields": true,
     "declaration": true,
+    "types": ["vite/client"]
   }
 }
