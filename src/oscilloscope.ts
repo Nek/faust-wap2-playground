@@ -1,6 +1,6 @@
 export default function oscilloscope(
+  canvas: HTMLCanvasElement,
   analyser: AnalyserNode,
-  canvas: HTMLCanvasElement
 ) {
   let ctx = canvas.getContext("2d")!
   let timeDomain = new Uint8Array(analyser.fftSize)

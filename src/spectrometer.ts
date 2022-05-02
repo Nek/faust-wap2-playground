@@ -5,9 +5,9 @@ type SpectrometerOptions = {
 }
 
 export default function spectrometer(
-  analyser: AnalyserNode,
   canvas: HTMLCanvasElement,
-  options?: SpectrometerOptions
+  analyser: AnalyserNode,
+  options?: SpectrometerOptions,
 ) {
   const {
     INCREMENT_PER_FRAME = 1,

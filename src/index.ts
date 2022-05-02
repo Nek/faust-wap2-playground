@@ -1,6 +1,7 @@
 import loadPlugin from "./loadPlugin"
 import spectrometer from "./spectrometer"
 import oscilloscope from "./oscilloscope"
+import slider from "./slider"
 
 function loadPluginAndStartVis() {
   const ctx = new AudioContext()
@@ -9,18 +10,25 @@ function loadPluginAndStartVis() {
   analyser.fftSize = FFT_SIZE
   loadPlugin(ctx, "./melody.wasm").then((node) => {
     if (node) {
+      console.log(node)
       node.setOutputParamHandler((path: string, value: number | undefined) =>
         console.log(path, value)
       )
       node.connect(analyser)
       node.connect(ctx.destination)
       spectrometer(
-        analyser,
-        document.getElementById("spectrum") as HTMLCanvasElement
+        document.getElementById("spectrum") as HTMLCanvasElement,
+        analyser
       )
       oscilloscope(
-        analyser,
-        document.getElementById("oscilloscope") as HTMLCanvasElement
+        document.getElementById("oscilloscope") as HTMLCanvasElement,
+        analyser
+      )
+      node.setParamValue("/melody/input/bpm", 120)
+      slider(
+        document.getElementById("bpm")! as HTMLInputElement,
+        (value: number) => node.setParamValue("/melody/input/bpm", value),
+        {min: 30, max: 180, step: 1, init: 120}
       )
     }
   })

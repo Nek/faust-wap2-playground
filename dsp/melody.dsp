@@ -1,8 +1,8 @@
-declare name "  ";
+declare name "melody";
 
 import("stdfaust.lib");
 
-bpm = hslider("BPM", 118, 30, 180, 0.1);
+bpm = hslider("/input/bpm", 118, 30, 180, 0.1);
 
 ch(p, v, s) = s*v : sp.panner(p);
 
@@ -10,7 +10,7 @@ djembeBeat = ba.beat(bpm*4);
 arp = (os.lf_saw(ba.tempo(bpm*4))+1)/2 * 4000 : ba.sAndH(djembeBeat) : qu.quantize(440, qu.penta);
 djembe = djembeBeat : pm.djembe(arp, 0, 1, 1) : ch(0.5, 0.8);
 
-kickBeat = ba.beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("kick-beat", 0, 1));
+kickBeat = ba.beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("/output/kick-beat", 0, 1));
 kick = kickBeat : sy.kick(60, 0, 0.0001, 0.5, 10) : ch(0.5, 1);
 
 hatBeat = ba.beat(bpm)@ba.tempo(bpm*2);
