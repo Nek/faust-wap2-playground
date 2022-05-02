@@ -278,12 +278,12 @@ let processorStringTemplate = `
             
             // Check inputs
             if (this.numIn > 0 && (!input || !input[0] || input[0].length === 0)) {
-                //console.log("Process input error");
+                console.error("Process input error");
                 return true;
             }
             // Check outputs
             if (this.numOut > 0 && (!output || !output[0] || output[0].length === 0)) {
-                //console.log("Process output error");
+                console.error("Process output error");
                 return true;
             }
             
@@ -342,7 +342,7 @@ let processorStringTemplate = `
     try {
         registerProcessor('processor', Processor);
     } catch (error) {
-        console.warn(error);
+        console.error("Can't register processor,", error);
     }
 `
 
@@ -460,8 +460,7 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         console.log("Keep the DSP url")
         fWorkletProcessors.push(url)
       } catch (e) {
-        console.error(e)
-        console.error("Faust " + url + " cannot be loaded or compiled")
+        console.error("Faust " + url + " cannot be loaded or compiled,", e)
         return null
       }
     }
@@ -475,12 +474,11 @@ export default async function loadPlugin(context: AudioContext, url: string) {
       processorOptions: options
     })
     node.onprocessorerror = (e) => {
-      console.log("An error from processor was detected,", e)
+      console.error("An error from processor was detected,", e)
     }
     return node
   } catch (e) {
-    console.error(e)
-    console.error("Faust " + url + " cannot be loaded or compiled")
+    console.error("Faust " + url + " cannot be loaded or compiled,", e)
     return null
   }
 }
