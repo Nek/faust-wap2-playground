@@ -1,11 +1,4 @@
-'use strict';
-
-if (typeof (AudioWorkletNode) === "undefined") {
-    alert("AudioWorklet is not supported in this browser !")
-}
-
-class melodyNode extends AudioWorkletNode {
-
+class Wap2AudioWorkletNode extends AudioWorkletNode {
     constructor(context, baseURL, options) {
         super(context, 'melody', options);
 
@@ -238,7 +231,7 @@ class melodyNode extends AudioWorkletNode {
         if (this.fCtrlLabel[ctrl] !== []) {
             for (var i = 0; i < this.fCtrlLabel[ctrl].length; i++) {
                 var path = this.fCtrlLabel[ctrl][i].path;
-                this.setParamValue(path, melodyNode.remap(value, 0, 127, this.fCtrlLabel[ctrl][i].min, this.fCtrlLabel[ctrl][i].max));
+                this.setParamValue(path, Wap2AudioWorkletNode.remap(value, 0, 127, this.fCtrlLabel[ctrl][i].min, this.fCtrlLabel[ctrl][i].max));
                 if (this.output_handler) {
                     this.output_handler(path, this.getParamValue(path));
                 }
@@ -255,7 +248,7 @@ class melodyNode extends AudioWorkletNode {
     pitchWheel(channel, wheel) {
         for (var i = 0; i < this.fPitchwheelLabel.length; i++) {
             var pw = this.fPitchwheelLabel[i];
-            this.setParamValue(pw.path, melodyNode.remap(wheel, 0, 16383, pw.min, pw.max));
+            this.setParamValue(pw.path, Wap2AudioWorkletNode.remap(wheel, 0, 16383, pw.min, pw.max));
             if (this.output_handler) {
                 this.output_handler(pw.path, this.getParamValue(pw.path));
             }
@@ -329,7 +322,7 @@ class melodyNode extends AudioWorkletNode {
 }
 
 // Factory class
-export default class melody {
+export default class PluginLoader {
 
     static fWorkletProcessors;
 
@@ -449,8 +442,8 @@ export default class melody {
             if (this.fWorkletProcessors.indexOf(name) === -1) {
                 try {
                     let re = /JSON_STR/g;
-                    let melodyProcessorString1 = melodyProcessorString.replace(re, json);
-                    let real_url = window.URL.createObjectURL(new Blob([melodyProcessorString1], { type: 'text/javascript' }));
+                    let processorString = processorStringTemplate.replace(re, json);
+                    let real_url = window.URL.createObjectURL(new Blob([processorString], { type: 'text/javascript' }));
                     await this.context.audioWorklet.addModule(real_url);
                     // Keep the DSP name
                     console.log("Keep the DSP name");
@@ -461,7 +454,7 @@ export default class melody {
                     return null;
                 }
             }
-            this.node = new melodyNode(this.context, this.baseURL,
+            this.node = new Wap2AudioWorkletNode(this.context, this.baseURL,
                 {
                     numberOfInputs: (parseInt(json_object.inputs) > 0) ? 1 : 0,
                     numberOfOutputs: (parseInt(json_object.outputs) > 0) ? 1 : 0,
@@ -518,25 +511,25 @@ export default class melody {
 
 // Template string for AudioWorkletProcessor
 
-let melodyProcessorString = `
+let processorStringTemplate = `
 
     'use strict';
 
     // Monophonic Faust DSP
-    class melodyProcessor extends AudioWorkletProcessor {
+    class Processor extends AudioWorkletProcessor {
         
         // JSON parsing functions
         static parse_ui(ui, obj, callback)
         {
             for (var i = 0; i < ui.length; i++) {
-                melodyProcessor.parse_group(ui[i], obj, callback);
+                Processor.parse_group(ui[i], obj, callback);
             }
         }
         
         static parse_group(group, obj, callback)
         {
             if (group.items) {
-                melodyProcessor.parse_items(group.items, obj, callback);
+                Processor.parse_items(group.items, obj, callback);
             }
         }
         
@@ -552,7 +545,7 @@ let melodyProcessorString = `
             if (item.type === "vgroup"
                 || item.type === "hgroup"
                 || item.type === "tgroup") {
-                melodyProcessor.parse_items(item.items, obj, callback);
+                Processor.parse_items(item.items, obj, callback);
             } else if (item.type === "hbargraph"
                        || item.type === "vbargraph") {
                 // Nothing
@@ -573,7 +566,7 @@ let melodyProcessorString = `
             if (item.type === "vgroup"
                 || item.type === "hgroup"
                 || item.type === "tgroup") {
-                melodyProcessor.parse_items(item.items, obj, callback);
+                Processor.parse_items(item.items, obj, callback);
             } else if (item.type === "hbargraph"
                        || item.type === "vbargraph") {
                 // Keep bargraph adresses
@@ -594,7 +587,7 @@ let melodyProcessorString = `
         {
             // Analyse JSON to generate AudioParam parameters
             var params = [];
-            melodyProcessor.parse_ui(JSON.parse(\`JSON_STR\`).ui, params, melodyProcessor.parse_item1);
+            Processor.parse_ui(JSON.parse(\`JSON_STR\`).ui, params, Processor.parse_item1);
             return params;
         }
        
@@ -765,7 +758,7 @@ let melodyProcessorString = `
                 }
                 
                 // Parse UI
-                melodyProcessor.parse_ui(this.json_object.ui, this, melodyProcessor.parse_item2);
+                Processor.parse_ui(this.json_object.ui, this, Processor.parse_item2);
                 
                 // Init DSP
                 this.factory.init(this.dsp, sampleRate); // 'sampleRate' is defined in AudioWorkletGlobalScope  
@@ -854,10 +847,8 @@ let melodyProcessorString = `
     // Globals
     const NUM_FRAMES = 128;
     try {
-        registerProcessor('melody', melodyProcessor);
+        registerProcessor('melody', Processor);
     } catch (error) {
         console.warn(error);
     }
 `;
-
-const dspName = "melody";

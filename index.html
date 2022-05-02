@@ -15,30 +15,30 @@
     <canvas width="600" height="300" id="oscilloscope"></canvas>
   </body>
   <script type="module">
-    import melody from "./melody.js";
+    import Loader from "./PluginLoader.js"
     import spectrometer from "./spectrometer.js"
-    import oscilloscope from "./oscilloscope.js";
+    import oscilloscope from "./oscilloscope.js"
 
-    var ctx = new AudioContext();
+    var ctx = new AudioContext()
 
-    var pluginURL = ".";
-    var plugin = new melody(ctx, pluginURL);
+    var pluginURL = "."
+    var plugin = new Loader(ctx, pluginURL)
 
     const FFT_SIZE = 1024
-    
-    var splitter = ctx.createChannelSplitter(3);
-    var analyser = ctx.createAnalyser();
-    analyser.fftSize = FFT_SIZE;
-    var beatAnalyser = ctx.createAnalyser();
-    beatAnalyser.fftSize = FFT_SIZE;
+
+    var splitter = ctx.createChannelSplitter(3)
+    var analyser = ctx.createAnalyser()
+    analyser.fftSize = FFT_SIZE
+    var beatAnalyser = ctx.createAnalyser()
+    beatAnalyser.fftSize = FFT_SIZE
 
     plugin.load().then((node) => {
-      node.connect(splitter);
-      node.connect(analyser);
+      node.connect(splitter)
+      node.connect(analyser)
       splitter.connect(beatAnalyser, 2, 0)
-      node.connect(ctx.destination);
+      node.connect(ctx.destination)
       spectrometer(analyser, document.getElementById("spectrum"))
       oscilloscope(beatAnalyser, document.getElementById("oscilloscope"))
-    });
+    })
   </script>
 </html>
