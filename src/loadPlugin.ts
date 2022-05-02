@@ -82,7 +82,9 @@ let processorStringTemplate = `
        
         constructor(options)
         {
+
             super(options);
+
             this.running = true;
             
             const importObject = {
@@ -151,7 +153,8 @@ let processorStringTemplate = `
                     }
             };
             
-            this.processor_instance = new WebAssembly.Instance(options.processorOptions.wasm_module, importObject);
+            const wasmModule = new WebAssembly.Module(options.processorOptions.wasm_buffer);
+            this.processor_instance = new WebAssembly.Instance(wasmModule, importObject);
             this.json_object = JSON.parse(options.processorOptions.json);
          
             this.output_handler = function(path, value) { this.port.postMessage({ path: path, value: value }); };
@@ -265,6 +268,7 @@ let processorStringTemplate = `
 
             // Init resulting DSP
             this.initAux();
+
         }
         
         process(inputs, outputs, parameters) 
@@ -375,7 +379,7 @@ export default async function loadPlugin(context: AudioContext, url: string) {
         _log10f: Math.log10,
         _max_f: Math.max,
         _min_f: Math.min,
-        _remainderf: (x:number, y:number) => x - Math.round(x / y) * y,
+        _remainderf: (x: number, y: number) => x - Math.round(x / y) * y,
         _powf: Math.pow,
         _roundf: Math.fround,
         _sinf: Math.sin,
@@ -442,7 +446,7 @@ export default async function loadPlugin(context: AudioContext, url: string) {
     let HEAPU8 = new Uint8Array(dspInstance.exports.memory.buffer)
     let json = heap2Str(HEAPU8)
     let json_object = JSON.parse(json)
-    let options = { wasm_module: dspModule, json: json }
+    let options = { json: json, wasm_buffer: dspBuffer}
 
     if (fWorkletProcessors.indexOf(url) === -1) {
       try {
@@ -470,8 +474,8 @@ export default async function loadPlugin(context: AudioContext, url: string) {
       channelInterpretation: "speakers",
       processorOptions: options
     })
-    node.onprocessorerror = () => {
-      console.log("An error from processor was detected.")
+    node.onprocessorerror = (e) => {
+      console.log("An error from processor was detected,", e)
     }
     return node
   } catch (e) {

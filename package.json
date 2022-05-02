@@ -1,14 +1,14 @@
 {
   "name": "faust-wap2",
   "version": "0.1.0",
-  "watch" : {
-    "compile" : "dsp/melody.dsp"
+  "watch": {
+    "compile": "dsp/melody.dsp"
   },
   "scripts": {
     "start": "vite --open & npm-watch",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "compile": "faust2wasm dsp/melody.dsp -worklet -opt && rm melody.js melody-processor.js && mv melody.wasm assets"
+    "compile": "faust2wasm dsp/melody.dsp -worklet && rm melody.js melody-processor.js && mv melody.wasm assets"
   },
   "browser": {
     "process": false,
