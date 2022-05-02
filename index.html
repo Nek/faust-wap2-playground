@@ -21,8 +21,6 @@
 
     var ctx = new AudioContext()
 
-    var pluginURL = "."
-
     const FFT_SIZE = 1024
 
     var splitter = ctx.createChannelSplitter(3)
@@ -31,7 +29,7 @@
     var beatAnalyser = ctx.createAnalyser()
     beatAnalyser.fftSize = FFT_SIZE
 
-    loadPlugin(ctx, pluginURL).then((node) => {
+    loadPlugin(ctx, "./melody.wasm").then((node) => {
       console.log(node.getDescriptor())
       node.connect(splitter)
       node.connect(analyser)

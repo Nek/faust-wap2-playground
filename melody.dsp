@@ -23,4 +23,4 @@ string = stringBeat : sy.combString(stringArp, 0.5)*0.5 : fi.lowpass(2, 1000) : 
 
 reverb(s, volume) = s : re.jpverb(1, 0, 0.5, 0.707, 0.1, 2, 1, 1, 1, 500, 2000) : par(i,2, _ * volume);
 
-process =  vgroup("melody", (djembe, reverb(djembe, 0.3) , kick, hat, string, reverb(string, 0.7) :> _, _, djembeBeat));
+process =  vgroup("melody", (djembe, reverb(djembe, 0.3) , kick, hat, string, reverb(string, 0.7) :> _, _, attach(_,abs : ba.linear2db : hbargraph("beat",-60,0))));
