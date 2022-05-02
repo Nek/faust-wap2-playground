@@ -1,0 +1,19 @@
+{
+  "name": "faust-wap2",
+  "version": "0.1.0",
+  "scripts": {
+    "start": "vite --open",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "browser": {
+    "process": false,
+    "setTimeout": false,
+    "util": false
+  },
+  "devDependencies": {
+    "prettier": "^2.5.1",
+    "typescript": "^4.5.5",
+    "vite": "^2.8.2"
+  }
+}

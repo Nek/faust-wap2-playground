@@ -151,7 +151,7 @@ let processorStringTemplate = `
                     }
             };
             
-            this.melody_instance = new WebAssembly.Instance(options.processorOptions.wasm_module, importObject);
+            this.processor_instance = new WebAssembly.Instance(options.processorOptions.wasm_module, importObject);
             this.json_object = JSON.parse(options.processorOptions.json);
          
             this.output_handler = function(path, value) { this.port.postMessage({ path: path, value: value }); };
@@ -170,8 +170,8 @@ let processorStringTemplate = `
             this.sample_size = 4;
             this.integer_size = 4;
             
-            this.factory = this.melody_instance.exports;
-            this.HEAP = this.melody_instance.exports.memory.buffer;
+            this.factory = this.processor_instance.exports;
+            this.HEAP = this.processor_instance.exports.memory.buffer;
             this.HEAP32 = new Int32Array(this.HEAP);
             this.HEAPF32 = new Float32Array(this.HEAP);
 
@@ -336,7 +336,7 @@ let processorStringTemplate = `
     // Globals
     const NUM_FRAMES = 128;
     try {
-        registerProcessor('melody', Processor);
+        registerProcessor('processor', Processor);
     } catch (error) {
         console.warn(error);
     }
@@ -470,7 +470,7 @@ export default async function loadPlugin(context, url) {
       processorOptions: options
     })
     node.onprocessorerror = () => {
-      console.log("An error from melody-processor was detected.")
+      console.log("An error from processor was detected.")
     }
     return node
   } catch (e) {

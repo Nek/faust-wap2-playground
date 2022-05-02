@@ -1,6 +1,22 @@
 export default class Wap2AudioWorkletNode extends AudioWorkletNode {
+  baseURL: string
+  json: string
+  json_object: any
+  parse_ui: (ui: any, obj: any) => void
+  parse_group: (group: any, obj: any) => void
+  parse_items: (items: any, obj: any) => void
+  parse_item: (item: any, obj: any) => void
+  output_handler: (path: string, value: number) => void
+  inputs_items: any[]
+  outputs_items: any[]
+  descriptor: any[]
+  fPitchwheelLabel: any[]
+  fCtrlLabel: any[]
+  gui: any
+  presets: any
+
   constructor(context, baseURL, options) {
-    super(context, "melody", options)
+    super(context, "processor", options)
 
     this.baseURL = baseURL
     this.json = options.processorOptions.json
@@ -161,7 +177,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    *
    * @return the current control value
    */
-  getParamValue(path) {
+  getParamValue(path: string) {
     return this.parameters.get(path).value
   }
 
@@ -241,10 +257,10 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
    * @param ctrl - the MIDI controller number (0..127)
    * @param value - the MIDI controller value (0..127)
    */
-  ctrlChange(channel, ctrl, value) {
+  ctrlChange(channel: number, ctrl: number, value: number) {
     if (this.fCtrlLabel[ctrl] !== []) {
       for (var i = 0; i < this.fCtrlLabel[ctrl].length; i++) {
-        var path = this.fCtrlLabel[ctrl][i].path
+        const path = this.fCtrlLabel[ctrl][i].path
         this.setParamValue(
           path,
           Wap2AudioWorkletNode.remap(
@@ -301,7 +317,7 @@ export default class Wap2AudioWorkletNode extends AudioWorkletNode {
 
   // For WAP
   onMidi(data) {
-    midiMessage(data)
+    this.midiMessage(data)
   }
 
   /**

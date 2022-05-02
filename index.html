@@ -14,26 +14,6 @@
     <canvas width="600" height="300" id="spectrum"></canvas>
     <canvas width="600" height="300" id="oscilloscope"></canvas>
   </body>
-  <script type="module">
-    import loadPlugin from "./loadPlugin.js"
-    import spectrometer from "./spectrometer.js"
-    import oscilloscope from "./oscilloscope.js"
-
-    var ctx = new AudioContext()
-
-    const FFT_SIZE = 1024
-
-    var splitter = ctx.createChannelSplitter(3)
-    var analyser = ctx.createAnalyser()
-    analyser.fftSize = FFT_SIZE
-
-    loadPlugin(ctx, "./melody.wasm").then((node) => {
-      node.setOutputParamHandler((path, value) => console.log(path, value))
-      node.connect(splitter)
-      node.connect(analyser)
-      node.connect(ctx.destination)
-      spectrometer(analyser, document.getElementById("spectrum"))
-      oscilloscope(analyser, document.getElementById("oscilloscope"))
-    })
+  <script type="module" src="./src/index.ts">
   </script>
 </html>
