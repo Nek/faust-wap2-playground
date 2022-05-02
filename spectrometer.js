@@ -15,7 +15,6 @@ export default function spectrometer(analyser, canvas, options = {}) {
     const canvasHeightUnit = canvasHeight / bufferLength;
 
     const loop = () => {
-        requestAnimationFrame(loop);
         analyser.getFloatFrequencyData(floatFrequencyData);
 
         for (let i = 0; i < bufferLength; i++) {
@@ -39,6 +38,8 @@ export default function spectrometer(analyser, canvas, options = {}) {
         );
         ctx.drawImage(canvas, 0, 0);
         ctx.restore();
+
+        requestAnimationFrame(loop);
     };
     loop()
 }

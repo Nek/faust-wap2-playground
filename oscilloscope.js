@@ -1,7 +1,6 @@
 export default function oscilloscope(analyser, canvas) {
   let ctx = canvas.getContext("2d")
   let timeDomain = new Uint8Array(analyser.fftSize)
-  let drawRequest = 0
 
   // draw signal
   const draw = (ctx, x0 = 0, y0 = 0, width = ctx.canvas.width - x0, height = ctx.canvas.height - y0) => {
@@ -20,11 +19,11 @@ export default function oscilloscope(analyser, canvas) {
     ctx.stroke()
   }
 
-  const drawLoop = () => {
+  const loop = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     draw(ctx, 0, 0, ctx.canvas.width, ctx.canvas.height)
-    drawRequest = requestAnimationFrame(drawLoop)
+    requestAnimationFrame(loop)
   }
-  drawLoop()
+  loop()
 
 }
