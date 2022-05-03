@@ -10,10 +10,18 @@ function loadPluginAndStartVis() {
   analyser.fftSize = FFT_SIZE
   loadPlugin(ctx, "./melody.wasm").then((node) => {
     if (node) {
-      console.log(node)
       node.setOutputParamHandler((path: string, value: number | undefined) => {
-        if (path === "/melody/output/kick-beat") {
-          (document.getElementById("kick") as HTMLInputElement).checked = (value ?? 0) > 0 ? true : false
+        switch (path) {
+          case "/melody/output/kick-beat":
+            ;(document.getElementById("kick") as HTMLInputElement).checked =
+              (value ?? 0) > 0 ? true : false
+            break
+          case "/melody/output/phasor":
+            console.log(value)
+            ;(
+              document.getElementById("djembe-freqs") as HTMLInputElement
+            ).value = typeof value !== "undefined" && value >= 0 ? value?.toString(10) : ""
+            break
         }
       })
       node.connect(analyser)
