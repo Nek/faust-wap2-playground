@@ -16,9 +16,9 @@ function loadPluginAndStartVis() {
             ;(document.getElementById("kick") as HTMLInputElement).checked =
               (value ?? 0) > 0 ? true : false
             break
-          case "/melody/output/notes":
+          case "/melody/output/log":
             ;(
-              document.getElementById("djembe-freqs") as HTMLInputElement
+              document.getElementById("log") as HTMLInputElement
             ).value = typeof value !== "undefined" && value >= 0 ? value?.toString(10) : ""
             break
         }
