@@ -7,13 +7,17 @@ type SpectrometerOptions = {
 export default function spectrometer(
   canvas: HTMLCanvasElement,
   analyser: AnalyserNode,
-  options?: SpectrometerOptions,
+  options?: SpectrometerOptions
 ) {
   const {
     INCREMENT_PER_FRAME = 1,
     COLOR_GAIN = 19,
     BASE_COLOR_HUE = 120
   } = options || {}
+
+  let o = {
+    id: 0
+  }
 
   const ctx = canvas.getContext("2d")
 
@@ -48,8 +52,9 @@ export default function spectrometer(
       ctx.drawImage(canvas, 0, 0)
       ctx.restore()
 
-      requestAnimationFrame(loop)
+      o.id = requestAnimationFrame(loop)
     }
     loop()
   }
+  return () => cancelAnimationFrame(o.id)
 }

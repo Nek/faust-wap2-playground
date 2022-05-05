@@ -1,11 +1,20 @@
 export default function button(
   el: HTMLButtonElement,
-  update: (value: number) => void,
+  update: (value: number) => void
 ) {
-  el.addEventListener("mousedown", (ev: Event) => {
+  const handlerDown = (ev: Event) => {
     update(1)
-  })
-  el.addEventListener("mouseup", (ev: Event) => {
+  }
+
+  const handlerUp = (ev: Event) => {
     update(0)
-  })
+  }
+
+  el.addEventListener("mousedown", handlerDown)
+  el.addEventListener("mouseup", handlerUp)
+
+  return () => {
+    el.removeEventListener("mousedown", handlerDown)
+    el.removeEventListener("mouseup", handlerUp)
+  }
 }

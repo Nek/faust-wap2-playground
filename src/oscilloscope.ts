@@ -1,9 +1,13 @@
 export default function oscilloscope(
   canvas: HTMLCanvasElement,
-  analyser: AnalyserNode,
+  analyser: AnalyserNode
 ) {
   let ctx = canvas.getContext("2d")!
   let timeDomain = new Uint8Array(analyser.fftSize)
+
+  let o = {
+    id: 0
+  }
 
   const draw = (
     ctx: CanvasRenderingContext2D,
@@ -32,7 +36,9 @@ export default function oscilloscope(
   const loop = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     draw(ctx, 0, 0, ctx.canvas.width, ctx.canvas.height)
-    requestAnimationFrame(loop)
+    o.id = requestAnimationFrame(loop)
   }
   loop()
+
+  return () => cancelAnimationFrame(o.id)
 }

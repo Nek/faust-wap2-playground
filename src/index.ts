@@ -4,6 +4,8 @@ import oscilloscope from "./oscilloscope"
 import slider from "./slider"
 import button from "./button"
 
+let clean: () => void;
+
 function loadPluginAndStartVis() {
   const ctx = new AudioContext()
   const FFT_SIZE = 1024
@@ -26,22 +28,30 @@ function loadPluginAndStartVis() {
       })
       node.connect(analyser)
       node.connect(ctx.destination)
-      spectrometer(
+      const cl1 = spectrometer(
         document.getElementById("spectrum") as HTMLCanvasElement,
         analyser
       )
-      oscilloscope(
+      const cl2 = oscilloscope(
         document.getElementById("oscilloscope") as HTMLCanvasElement,
         analyser
       )
-      node.setParamValue("/melody/input/bpm", 120)
-      slider(
-        document.getElementById("bpm")! as HTMLInputElement,
+      const bpmEl = document.getElementById("bpm")! as HTMLInputElement
+      node.setParamValue("/melody/input/bpm", bpmEl.valueAsNumber)
+      const cl3 = slider(
+        bpmEl,
         (value: number) => node.setParamValue("/melody/input/bpm", value),
-        { min: 30, max: 180, step: 1, init: 120 }
+        { min: 30, max: 180, step: 1, init: bpmEl.valueAsNumber }
       )
-      button(document.getElementById("restart")! as HTMLButtonElement, (value: number) => node.setParamValue("/melody/input/restart", value)
+      const cl4 = button(document.getElementById("restart")! as HTMLButtonElement, (value: number) => node.setParamValue("/melody/input/restart", value)
       )
+
+      clean = () => {
+        cl1()
+        cl2()
+        cl3()
+        cl4()
+      }
     }
   })
   return ctx
@@ -64,6 +74,7 @@ unlockAudioContext(ctx)
 // Hot reload when DSP updates! This code is removed in production
 if (import.meta.hot) {
   import.meta.hot.on("dsp-update", () => {
+    clean()
     ctx.close()
     ctx = loadPluginAndStartVis()
   })

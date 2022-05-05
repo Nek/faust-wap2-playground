@@ -15,7 +15,12 @@ export default function slider(
   el.max = max.toString(10)
   el.value = init.toString(10)
   el.step = step.toString(10)
-  el.addEventListener("change", (ev: Event) => {
+
+  const handler = (ev: Event) => {
     update(el.valueAsNumber)
-  })
+  }
+
+  el.addEventListener("change", handler)
+
+  return () => el.removeEventListener("change", handler)
 }
