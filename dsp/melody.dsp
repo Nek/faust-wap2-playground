@@ -13,7 +13,7 @@ pulse(w, bpm) = os.lf_sawpos_reset(bpm/60, reset) < w;
 beat(bpm) = pulse(0.5, bpm);
 
 hat_beat = beat(bpm)@ba.tempo(bpm*2);
-hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : ch(0.3, 0.3);
+hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : ch(0.3, 0.05);
 
 // stringBpm = bpm*4;
 // stringBeat = beat(stringBpm)@ba.tempo(bpm*4*3);
