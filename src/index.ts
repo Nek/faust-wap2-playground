@@ -9,7 +9,7 @@ function loadPluginAndStartVis() {
   const FFT_SIZE = 1024
   const analyser = ctx.createAnalyser()
   analyser.fftSize = FFT_SIZE
-  loadPlugin(ctx, "./melody.wasm").then((node) => {
+  loadPlugin(ctx, "./melody.wasm").then((node) => { 
     if (node) {
       node.setOutputParamHandler((path: string, value: number | undefined) => {
         switch (path) {

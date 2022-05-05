@@ -62,10 +62,6 @@ noise   = random/2147483647.0;
 
 minor_chord = _ <: _, _+3, _+7;
 
-// minor_scale = (1,pow(2,2/12),pow(2,3/12),pow(2,5/12),pow(2,7/12),pow(2,8/12),pow(2,10/12));
-// 0 - 1
-// 0 2 3 5 7 10 12
-
 minor_scale = waveform{0, 2, 3, 5, 7, 8, 10};
 rand_note(scale, n) = rdtable(minor_scale, int(n * (noise + 1)/2));
 
@@ -73,23 +69,16 @@ progression1 = waveform{0, 5, 2, 6}; // i-VI-III-VII
 progression2 = waveform{0, 5, 2, 3}; // i-VI-III-iv    
 progression3 = waveform{0, 3, 4}; // i-iv-v
 
-// process = random_note(36, 60) : ba.midikey2hz : ba.latch(gate) : qu.quantize(ba.midikey2hz(3), minor_scale) : ba.hz2midikey : minor_chord : simple_pad <: _ , _;
-// fi.highpass6e(_, os.osc(_))
-
-// r = rand_note(minor_scale, 7) : ba.latch(gate);
-
 key = 3; 
 
-//  <: attach(_, vbargraph("/output/log", 0, 127))
-
 djembe_beat = beat(bpm*4);
-percussion = djembe_beat : pm.djembe(1, 0, 1, 1) : ch(0.5, 0.8);
+percussion = djembe_beat : pm.djembe(ba.midikey2hz(key + 12 * 6), 0, 1, 1) : ch(ba.latch(djembe_beat, noise), 0.75);
 
 not = select2(_ > 0, 0, 1);
 
 marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2));
 marimba_notes = rand_note(minor_scale, 7) : ba.latch(djembe_beat) : _ + 12 * 2 + key;
-marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.4 );
+marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.2);
 
 filt_tri(gate, freq) =  os.osc(freq) : fi.bandpass(1, freq*(0.7+0.2*os.osc(bpm/60*4)), freq*(1.1+0.2*os.osc(bpm/60*4))) : _ * env
 with {
@@ -106,7 +95,7 @@ degree_note = rdtable(progression2, degree_num);
 gate = beat(bpm/8);
 simple_pad(gate) =  par(i, 3, filt_tri(gate)) :> _ / 3;
 chords = degree_note : +(4 * 12 + key) : minor_chord : par(i, 3, ba.midikey2hz) : simple_pad(gate) <: _, _;
-chords_reverb = chords : reverb(0.5);
+chords_reverb = chords : reverb(0.5) <: par(i, 2, fi.highpass(2, 250));
 
 log_beat = beat(bpm) <: attach(_, vbargraph("/output/log", 0, 100)) <: _, _ ;//attach(beat(bpm), vbargraph("/output/log", 0, 1)) * 0.00001 <: _, _;
-process = chords, chords_reverb, percussion, kick, hat, marimba :> _ /3 , _ /3;
+process = chords_reverb, percussion, kick, hat, marimba :> _ /3 , _ /3;
