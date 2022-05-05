@@ -6,11 +6,11 @@ bpm = hslider("/input/bpm", 118, 30, 180, 0.1);
 
 ch(p, v) = _ * v : sp.panner(p);
 
-pulse(w, bpm) = os.lf_sawpos_reset(bpm/60, 0) < w;
 
 reset = button("restart");
 
-beat(bpm) = os.lf_sawpos_reset(bpm/60, reset) < 0.5;
+pulse(w, bpm) = os.lf_sawpos_reset(bpm/60, reset) < w;
+beat(bpm) = pulse(0.5, bpm);
 
 hat_beat = beat(bpm)@ba.tempo(bpm*2);
 hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : ch(0.3, 0.3);
