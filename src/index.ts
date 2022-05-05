@@ -2,6 +2,7 @@ import loadPlugin from "./loadPlugin"
 import spectrometer from "./spectrometer"
 import oscilloscope from "./oscilloscope"
 import slider from "./slider"
+import button from "./button"
 
 function loadPluginAndStartVis() {
   const ctx = new AudioContext()
@@ -38,6 +39,8 @@ function loadPluginAndStartVis() {
         document.getElementById("bpm")! as HTMLInputElement,
         (value: number) => node.setParamValue("/melody/input/bpm", value),
         { min: 30, max: 180, step: 1, init: 120 }
+      )
+      button(document.getElementById("restart")! as HTMLButtonElement, (value: number) => node.setParamValue("/melody/input/restart", value)
       )
     }
   })

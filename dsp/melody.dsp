@@ -4,13 +4,19 @@ import("stdfaust.lib");
 
 bpm = hslider("/input/bpm", 118, 30, 180, 0.1);
 
-ch(p, v, s) = s*v : sp.panner(p);
+ch(p, v) = _ * v : sp.panner(p);
 
-hat_beat = ba.beat(bpm)@ba.tempo(bpm*2);
-hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : ch(0.3, 1);
+pulse(w, bpm) = os.lf_sawpos_reset(bpm/60, 0) < w;
+
+reset = button("restart");
+
+beat(bpm) = os.lf_sawpos_reset(bpm/60, reset) < 0.5;
+
+hat_beat = beat(bpm)@ba.tempo(bpm*2);
+hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : ch(0.3, 0.3);
 
 // stringBpm = bpm*4;
-// stringBeat = ba.beat(stringBpm)@ba.tempo(bpm*4*3);
+// stringBeat = beat(stringBpm)@ba.tempo(bpm*4*3);
 // stringArp = os.lf_saw(ba.tempo(stringBpm)+3)/2 * 1200 : ba.sAndH(stringBeat) : qu.quantize(440, qu.penta);
 // string = stringBeat : sy.combString(stringArp, 0.5)*0.5 : fi.lowpass(2, 1500) : ch(0.35, 0.3);
 delay(dt) = de.sdelay(dt*2, 1024, dt);
@@ -76,14 +82,14 @@ key = 3;
 
 //  <: attach(_, vbargraph("/output/log", 0, 127))
 
-djembe_beat = ba.beat(bpm*4);
+djembe_beat = beat(bpm*4);
 percussion = djembe_beat : pm.djembe(1, 0, 1, 1) : ch(0.5, 0.8);
 
-pulse(w, bpm) = ba.period(ba.tempo(bpm)) > (w * ba.tempo(bpm));//ba.pulsen(ba.tempo(bpm)*w, ba.tempo(bpm));
+not = select2(_ > 0, 0, 1);
 
-marimba_beat = pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2);
+marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2));
 marimba_notes = rand_note(minor_scale, 7) : ba.latch(djembe_beat) : _ + 12 * 2 + key;
-marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.06  );
+marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.4 );
 
 filt_tri(gate, freq) =  os.osc(freq) : fi.bandpass(1, freq*(0.7+0.2*os.osc(bpm/60*4)), freq*(1.1+0.2*os.osc(bpm/60*4))) : _ * env
 with {
@@ -91,15 +97,16 @@ with {
     env = en.adsr(0.0001, 0, 1, r, gate);
 };
 
-kick_beat = ba.beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("/output/kick-beat", 0, 1));
-kick = kick_beat : sy.kick(60, 0, 0.0001, 0.5, 10) : ch(0.5, 1);
+kick_beat = beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("/output/kick-beat", 0, 1));
+kick = kick_beat : sy.kick(60, 0, 0.0001, 0.5, 2) : ch(0.5, 0.7);
 
 degree_num = ba.counter(gate) % 4;
 degree_note = rdtable(progression2, degree_num);
 
-gate = ba.beat(bpm/8);
+gate = beat(bpm/8);
 simple_pad(gate) =  par(i, 3, filt_tri(gate)) :> _ / 3;
 chords = degree_note : +(4 * 12 + key) : minor_chord : par(i, 3, ba.midikey2hz) : simple_pad(gate) <: _, _;
 chords_reverb = chords : reverb(0.5);
 
-process = chords, chords_reverb, percussion, kick, hat, marimba :> _ , _;
+log_beat = beat(bpm) <: attach(_, vbargraph("/output/log", 0, 100)) <: _, _ ;//attach(beat(bpm), vbargraph("/output/log", 0, 1)) * 0.00001 <: _, _;
+process = chords, chords_reverb, percussion, kick, hat, marimba :> _ /3 , _ /3;
