@@ -16,8 +16,7 @@ function loadPluginAndStartVis() {
             ;(document.getElementById("kick") as HTMLInputElement).checked =
               (value ?? 0) > 0 ? true : false
             break
-          case "/melody/output/phasor":
-            console.log(value)
+          case "/melody/output/notes":
             ;(
               document.getElementById("djembe-freqs") as HTMLInputElement
             ).value = typeof value !== "undefined" && value >= 0 ? value?.toString(10) : ""
