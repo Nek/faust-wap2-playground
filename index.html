@@ -11,15 +11,37 @@
     <title>Host that loads a plugin with its GUI</title>
   </head>
   <body>
-    <input type="range" min="30" max="180" value="120" id="bpm"/>
-    <input type="checkbox" id="kick" />
+    <input autocomplete="off" type="range" min="30" max="180" va lue="120" id="bpm"/>
+    <input autocomplete="off" type="checkbox" id="kick" />
     <button id="restart">Restart</button>
-    <input type="number" id="log" />
-    <select id="progression">
-      <option value="0">i-iv-III-VI</option>
-      <option value="1">i-iv-VI-v</option>
-      <option value="2">i-VI-III-VII</option>
-      <option value="3">i-VI-III-iv</option>
+    <input autocomplete="off" type="number" id="log" />
+    <select autocomplete="off" name="progression" id="progression" value="0">
+      <option value='{"scale":"minor","prog":"0"}'>m i - iv - III - VI</option>
+      <option value='{"scale":"minor","prog":"1"}'>m i - iv - VI - v</option>
+      <option value='{"scale":"minor","prog":"2"}'>m i - VI - III - VII</option>
+      <option value='{"scale":"minor","prog":"3"}'>m i - VI - III - iv</option>
+      <option value='{"scale":"major","prog":"4"}'>M I - V - vi - IV</option>
+      <option value='{"scale":"major","prog":"5"}'>M I - vi - IV - V</option>
+      <option value='{"scale":"major","prog":"6"}'>M I - IV - V - IV</option>
+      <option value='{"scale":"major","prog":"7"}'>M vi - IV - I - V</option>
+      <option value='{"scale":"major","prog":"8"}'>M I - IV - ii - V</option>
+      <option value='{"scale":"major","prog":"9"}'>M I - IV - I - V</option>
+      <option value='{"scale":"major","prog":"10"}'>M i - V - i - iv</option>
+      <option value='{"scale":"major","prog":"11"}'>M vi - V - IV - III</option>
+    </select>
+    <select autocomplete="off" name="key" id="key" value="0">
+      <option value="0">C</option>
+      <option value="1">C#</option>
+      <option value="2">D</option>
+      <option value="3">D#</option>
+      <option value="4">E</option>
+      <option value="5">F</option>
+      <option value="6">F#</option>
+      <option value="7">G</option>
+      <option value="8">G#</option>
+      <option value="9">A</option>
+      <option value="10">A#</option>
+      <option value="11">B</option>
     </select>
     <canvas width="600" height="300" id="spectrum"></canvas>
     <canvas width="600" height="300" id="oscilloscope"></canvas>

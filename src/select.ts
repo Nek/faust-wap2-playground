@@ -1,9 +1,9 @@
 export default function select(
   el: HTMLSelectElement,
-  update: (value: number) => void,
+  update: (value: string) => void
 ) {
   const handler = (ev: Event) => {
-    update(parseInt(el.value, 10))
+    update(el.value)
   }
 
   el.addEventListener("input", handler)

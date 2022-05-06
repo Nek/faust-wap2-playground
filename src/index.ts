@@ -46,13 +46,19 @@ function loadPluginAndStartVis() {
       )
       const cl4 = button(document.getElementById("restart")! as HTMLButtonElement, (value: number) => node.setParamValue("/melody/input/restart", value)
       )
-      const cl5 = select(document.getElementById("progression")! as HTMLSelectElement, (value: number) => node.setParamValue("/melody/input/progression", value))
+      const cl5 = select(document.getElementById("progression")! as HTMLSelectElement, (value: string) => {
+        const {scale, prog} = JSON.parse(value)
+        node.setParamValue("/melody/input/progression", prog)
+        node.setParamValue("/melody/input/scale", scale === 'minor' ? 0 : 1)
+      })
+      const cl6 = select(document.getElementById("key")! as HTMLSelectElement, (value: string) => node.setParamValue("/melody/input/key", parseInt(value, 10)))
       clean = () => {
         cl1()
         cl2()
         cl3()
         cl4()
         cl5()
+        cl6()
       }
     }
   })
