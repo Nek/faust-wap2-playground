@@ -75,12 +75,9 @@ major_scale_wave = waveform{0, 2, 4, 5, 7, 9, 11};
 minor_scale(n) = minor_scale_wave, n : rdtable;
 major_scale(n) = minor_scale_wave, n : rdtable;
 
-scale(n) = n : sel_wave
-with {
-    sel_wave(n) = minor_scale(n), major_scale(n) : ba.selectn(2, input_scale);
-};
+scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, input_scale);
 
-rand_note(n) = int(n * (noise + 1)/2) : scale;
+rand_note = int(7 * (noise + 1)/2) : scale;
 
 minor_prog_wave1 = waveform{0, 3, 2, 5}; // i-iv-III-VI Smells like teen spirit
 minor_prog_wave2 = waveform{0, 3, 5, 4}; // i-iv-VI-v Back to Black
@@ -135,14 +132,17 @@ percussion = djembe_beat : pm.djembe(ba.midikey2hz(key + 12 * 6), 0, 1, 1) : ch(
 not = select2(_ > 0, 0, 1);
 
 marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2)) <: attach(_, vbargraph("/output/log", 0, 100));
-marimba_notes = rand_note(7) : ba.latch(djembe_beat) : _ + 12 * 2 + key;
-marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.2);
+marimba_notes = rand_note : ba.latch(djembe_beat) : _ + 12 + key : ba.midikey2hz;
+marimba = marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.2);
 
-filt_tri(gate, freq) =  os.osc(freq) : fi.bandpass(1, freq*(0.7+0.2*os.osc(bpm/60*4)), freq*(1.1+0.2*os.osc(bpm/60*4))) : _ * env
+filt_tri(gate, freq) =  os.osc(freq) : fi.bandpass(1, freq * (0.7 + 0.2 * os.osc(bpm / 60 * 4)), freq * (1.1 + 0.2 * os.osc(bpm / 60 * 4))) : _ * env
 with {
     r = 60 / (bpm/8);   
     env = en.adsr(0.0001, 0, 1, r, gate);
 };
+
+gate = beat(bpm/8);
+simple_pad(gate) =  par(i, 3, filt_tri(gate)) :> _ / 3;
 
 kick_beat = beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargraph("/output/kick-beat", 0, 1));
 kick = kick_beat : sy.kick(60, 0, 0.0001, 0.5, 2) : ch(0.5, 0.7);
@@ -150,8 +150,7 @@ kick = kick_beat : sy.kick(60, 0, 0.0001, 0.5, 2) : ch(0.5, 0.7);
 degree_num = ba.counter(gate) % 4;
 degree_note = degree_num : progression;
 
-gate = beat(bpm/8);
-simple_pad(gate) =  par(i, 3, filt_tri(gate)) :> _ / 3;
+
 chords = degree_note : +(4 * 12 + key) : chord : par(i, 3, ba.midikey2hz) : simple_pad(gate) <: _, _;
 chords_reverb = chords : reverb(0.5) <: par(i, 2, fi.highpass(2, 250));
 
