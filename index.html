@@ -6,45 +6,61 @@
   />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-
+<style>
+  html, body {
+    margin: 0;
+  }
+</style>
   <head>
     <title>Host that loads a plugin with its GUI</title>
   </head>
   <body>
-    <input autocomplete="off" type="range" min="30" max="180" va lue="120" id="bpm"/>
-    <input autocomplete="off" type="checkbox" id="kick" />
-    <button id="restart">Restart</button>
-    <input autocomplete="off" type="number" id="log" />
-    <select autocomplete="off" name="progression" id="progression" value="0">
-      <option value='{"scale":"minor","prog":"0"}'>m i - iv - III - VI</option>
-      <option value='{"scale":"minor","prog":"1"}'>m i - iv - VI - v</option>
-      <option value='{"scale":"minor","prog":"2"}'>m i - VI - III - VII</option>
-      <option value='{"scale":"minor","prog":"3"}'>m i - VI - III - iv</option>
-      <option value='{"scale":"major","prog":"4"}'>M I - V - vi - IV</option>
-      <option value='{"scale":"major","prog":"5"}'>M I - vi - IV - V</option>
-      <option value='{"scale":"major","prog":"6"}'>M I - IV - V - IV</option>
-      <option value='{"scale":"major","prog":"7"}'>M vi - IV - I - V</option>
-      <option value='{"scale":"major","prog":"8"}'>M I - IV - ii - V</option>
-      <option value='{"scale":"major","prog":"9"}'>M I - IV - I - V</option>
-      <option value='{"scale":"major","prog":"10"}'>M i - V - i - iv</option>
-      <option value='{"scale":"major","prog":"11"}'>M vi - V - IV - III</option>
-    </select>
-    <select autocomplete="off" name="key" id="key" value="0">
-      <option value="0">C</option>
-      <option value="1">C#</option>
-      <option value="2">D</option>
-      <option value="3">D#</option>
-      <option value="4">E</option>
-      <option value="5">F</option>
-      <option value="6">F#</option>
-      <option value="7">G</option>
-      <option value="8">G#</option>
-      <option value="9">A</option>
-      <option value="10">A#</option>
-      <option value="11">B</option>
-    </select>
-    <canvas width="600" height="300" id="spectrum"></canvas>
-    <canvas width="600" height="300" id="oscilloscope"></canvas>
+    <div id="app"></div>
+  <!-- 
+      <label>BPM</label>
+      <input autocomplete="off" type="range" min="30" max="180" value="120" id="bpm"/>
+      <label>Kick</label>
+      <input checked autocomplete="off" type="checkbox" id="/melody/input/kick" />
+      <label>Hat</label>
+      <input checked autocomplete="off" type="checkbox" id="/melody/input/hat" />
+      <label>Chords</label>
+      <input checked autocomplete="off" type="checkbox" id="/melody/input/chords" />
+      <label>Marimba</label>
+      <input checked autocomplete="off" type="checkbox" id="/melody/input/marimba" />
+      <label>Djembe</label>
+      <input checked autocomplete="off" type="checkbox" id="/melody/input/percussion" />
+      <label>Progression</label>
+      <select autocomplete="off" name="progression" id="progression" value="0">
+        <option value='{"scale":"minor","prog":"0"}'>m i - iv - III - VI</option>
+        <option value='{"scale":"minor","prog":"1"}'>m i - iv - VI - v</option>
+        <option value='{"scale":"minor","prog":"2"}'>m i - VI - III - VII</option>
+        <option value='{"scale":"minor","prog":"3"}'>m i - VI - III - iv</option>
+        <option value='{"scale":"major","prog":"4"}'>M I - V - vi - IV</option>
+        <option value='{"scale":"major","prog":"5"}'>M I - vi - IV - V</option>
+        <option value='{"scale":"major","prog":"6"}'>M I - IV - V - IV</option>
+        <option value='{"scale":"major","prog":"7"}'>M vi - IV - I - V</option>
+        <option value='{"scale":"major","prog":"8"}'>M I - IV - ii - V</option>
+        <option value='{"scale":"major","prog":"9"}'>M I - IV - I - V</option>
+        <option value='{"scale":"major","prog":"10"}'>M i - V - i - iv</option>
+        <option value='{"scale":"major","prog":"11"}'>M vi - V - IV - III</option>
+      </select>
+      <label>Key (maybe it works)</label>
+      <select autocomplete="off" name="key" id="key" value="0">
+        <option value="0">C</option>
+        <option value="1">C#</option>
+        <option value="2">D</option>
+        <option value="3">D#</option>
+        <option value="4">E</option>
+        <option value="5">F</option>
+        <option value="6">F#</option>
+        <option value="7">G</option>
+        <option value="8">G#</option>
+        <option value="9">A</option>
+        <option value="10">A#</option>
+        <option value="11">B</option>
+      </select><br>
+      <canvas width="600" height="300" id="spectrum"></canvas>
+      <canvas width="600" height="300" id="oscilloscope"></canvas> -->
   </body>
   <script type="module" src="./src/index.ts">
   </script>
