@@ -5,16 +5,16 @@ if (import.meta.hot) {
   })
 }
 
-import { PI } from "@thi.ng/math/api"
 import { Atom } from "@thi.ng/atom/atom"
-import { line } from "@thi.ng/geom/line"
 import { canvas } from "@thi.ng/hdom-canvas"
-import { DEFAULT_THEME, Key, NONE, type GUITheme } from "@thi.ng/imgui/api"
-import { sliderV } from "@thi.ng/imgui/components/sliderv"
+import { DEFAULT_THEME, Key, type GUITheme } from "@thi.ng/imgui/api"
+import { dropdown } from "@thi.ng/imgui/components/dropdown"
 import { ring } from "@thi.ng/imgui/components/ring"
+import { sliderV } from "@thi.ng/imgui/components/sliderv"
+import { textLabel } from "@thi.ng/imgui/components/textlabel"
 import { IMGUI } from "@thi.ng/imgui/gui"
-import { gridLayout, GridLayout } from "@thi.ng/layout/grid-layout"
-import { clamp } from "@thi.ng/math/interval"
+import { gridLayout } from "@thi.ng/layout/grid-layout"
+import { PI } from "@thi.ng/math/api"
 import { gestureStream } from "@thi.ng/rstream-gestures"
 import { fromAtom } from "@thi.ng/rstream/atom"
 import { fromDOMEvent } from "@thi.ng/rstream/event"
@@ -25,7 +25,6 @@ import { float } from "@thi.ng/strings/float"
 import { updateDOM } from "@thi.ng/transducers-hdom"
 import { map } from "@thi.ng/transducers/map"
 import loadPlugin from "./loadPlugin"
-import { textLabel, textLabelRaw } from "@thi.ng/imgui/components/textlabel"
 
 const unlockAudioContext = (ctx: AudioContext) => {
   if (ctx.state !== "suspended") return
@@ -70,29 +69,63 @@ const THEMES: Partial<GUITheme>[] = [
 ]
 
 // float value formatters
-const F2 = float(3)
+const F1 = float(0)
+const F2 = float(2)
 
 // UI constants
-const FONT = "10px 'IBM Plex Mono'"
+const FONT = "12px 'IBM Plex Mono'"
 const CHANNEL_LABELS = ["KICK", "HATS", "CHRD", "MRMB", "DJMB"]
-const CHANNEL_PARAMS = ["kick/volume", "hat/volume", "chords/volume", "marimba/volume", "djembe/volume"]
+const CHANNEL_PARAMS = [
+  "kick/volume",
+  "hat/volume",
+  "chords/volume",
+  "marimba/volume",
+  "djembe/volume"
+]
 interface AppState {
   theme: number
   channels: number[]
   bpm: number
+  progression: number,
+  key: number
 }
+
+const PROGRESSIONS = [
+  "i - iv - III - VI",
+  "i - iv - VI - v",
+  "i - VI - III - VII",
+  "i - VI - III - iv",
+  "I - V - vi - IV",
+  "I - vi - IV - V",
+  "I - IV - V - IV",
+  "vi - IV - I - V",
+  "I - IV - ii - V",
+  "I - IV - I - V",
+  "i - V - i - iv",
+  "vi - V - IV - III"
+]
+const KEYS = [
+  'C',
+  'C#',
+  'D',
+  'D#',
+  'E',
+  'F',
+  'F#',
+  'G',
+  'G#',
+  'A',
+  'A#',
+  'B'
+]
 
 // main immutable app state wrapper (with time travel)
 const DB = new Atom<AppState>({
   theme: 0,
-  channels: [
-    0,
-    0,
-    0,
-    0,
-    0
-  ],
-  bpm: 118
+  channels: [0, 0, 0, 0, 0],
+  bpm: 118,
+  progression: 0,
+  key: 0,
 })
 
 // theme merging helper
@@ -152,7 +185,7 @@ const app = () => {
     // obtain atom value
     const state = DB.deref()
     // setup initial layout (single column)
-    const grid = gridLayout(10, 10, window.innerWidth - 20, 1, 16, 4)
+    const grid = gridLayout(10, 10, 300 - 20, 1, 16, 4)
 
     gui.setTheme(themeForID(state.theme))
 
@@ -161,11 +194,9 @@ const app = () => {
 
     let res: any
 
-    const row1 = grid.nest(5, [1, 12])
-    const row2 = grid.nest(5)
-    row2.next()
-    row2.next()
-
+    const row1 = grid.nest(5, [1, 10])
+    const row2 = grid.nest(5, [1, 3])
+    const row3 = grid.nest(1, [5, 5])
     const path = (name: string) => `/melody/input/${name}`
 
     CHANNEL_PARAMS.forEach((param, i) => {
@@ -177,10 +208,10 @@ const app = () => {
           param,
           0,
           1,
-          0.05,
+          0.01,
           state.channels[i],
           8,
-          CHANNEL_LABELS[i],
+          "",
           F2
         )) !== undefined
       ) {
@@ -188,14 +219,13 @@ const app = () => {
         DB.resetIn(["channels", i], res)
       }
       textLabel(gui, column, CHANNEL_LABELS[i])
-
     })
 
     if (
       (res = ring(
         gui,
         row2,
-        'bpm',
+        "bpm",
         30,
         180,
         1,
@@ -203,11 +233,40 @@ const app = () => {
         PI,
         0.5,
         "BPM",
-        F2
+        F1
       )) !== undefined
     ) {
-      node?.setParamValue(path('bpm'), res)
+      node?.setParamValue(path("bpm"), res)
       DB.resetIn(["bpm"], res)
+    }
+    textLabel(gui, row3, "PROGRESSION")
+    if (
+      (res = dropdown(
+        gui,
+        row3,
+        "progression",
+        state.progression,
+        PROGRESSIONS,
+        ""
+      )) !== undefined
+    ) {
+      node?.setParamValue(path("progression"), res)
+      node?.setParamValue(path("scale"), res > 3 ? 1 : 0)
+      DB.resetIn(["progression"], res)
+    }
+    textLabel(gui, row3, "KEY")
+    if (
+      (res = dropdown(
+        gui,
+        row3,
+        "key",
+        state.key,
+        KEYS,
+        ""
+      )) !== undefined
+    ) {
+      node?.setParamValue(path("key"), res)
+      DB.resetIn(["key"], res)
     }
 
     gui.end()
@@ -215,7 +274,7 @@ const app = () => {
 
   // main component function
   return () => {
-    const width = window.innerWidth
+    const width = 300 //window.innerWidth
     const height = window.innerHeight
 
     // this is only needed because we're NOT using a RAF update loop:
