@@ -132,7 +132,7 @@ percussion = djembe_beat : pm.djembe(ba.midikey2hz(key + 12 * 6), 0, 1, 1) : ch(
 not = select2(_ > 0, 0, 1);
 
 marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2)) <: attach(_, vbargraph("/output/log", 0, 100));
-marimba_notes = rand_note : ba.latch(djembe_beat) : _ + 12 + key : ba.midikey2hz;
+marimba_notes = rand_note : ba.latch(djembe_beat) : _ + 3 * 12 + key : ba.midikey2hz;
 marimba = marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.2);
 
 filt_tri(gate, freq) =  os.osc(freq) : fi.bandpass(1, freq * (0.7 + 0.2 * os.osc(bpm / 60 * 4)), freq * (1.1 + 0.2 * os.osc(bpm / 60 * 4))) : _ * env
