@@ -185,9 +185,12 @@ const app = () => {
     // obtain atom value
     const state = DB.deref()
     // setup initial layout (single column)
-    const grid = gridLayout(10, 10, 300 - 20, 1, 16, 4)
+    const width = Math.min(window.innerWidth, window.innerHeight)
+    const rowH = width/20
+    const grid = gridLayout(10, 10, width - 20, 1, rowH, 4)
 
-    gui.setTheme(themeForID(state.theme))
+    const size = width * 18 / 600
+    gui.setTheme({...themeForID(state.theme), font: `${size}px 'IBM Plex Mono'`})
 
     // start frame
     gui.begin(draw)
@@ -274,7 +277,7 @@ const app = () => {
 
   // main component function
   return () => {
-    const width = 300 //window.innerWidth
+    const width = window.innerWidth
     const height = window.innerHeight
 
     // this is only needed because we're NOT using a RAF update loop:
