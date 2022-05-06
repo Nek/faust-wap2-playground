@@ -63,11 +63,45 @@ noise   = random/2147483647.0;
 minor_chord = _ <: _, _+3, _+7;
 
 minor_scale = waveform{0, 2, 3, 5, 7, 8, 10};
-rand_note(scale, n) = rdtable(minor_scale, int(n * (noise + 1)/2));
+rand_note(scale, n) = rdtable(minor_scale, int(n * (noise + 1)/2));     
 
-progression1 = waveform{0, 5, 2, 6}; // i-VI-III-VII 
-progression2 = waveform{0, 5, 2, 3}; // i-VI-III-iv    
-progression3 = waveform{0, 3, 4}; // i-iv-v
+progression1 = waveform{0, 3, 2, 5}; // i-iv-III-VI Smells like teen spirit
+progression2 = waveform{0, 3, 5, 4}; // i-iv-VI-v Back to Black
+progression3 = waveform{0, 5, 2, 6}; // i-VI-III-VII Save tonight
+progression4 = waveform{0, 5, 2, 3}; // i-VI-III-iv Turning Tables
+
+// progression1 = waveform{0, 5, 2, 6}; // i-VI-III-VII 
+// progression2 = waveform{0, 5, 2, 3}; // i-VI-III-iv    
+// progression2 = waveform{0, 1, 1, 1}; // i-VI-III-iv    
+
+// progression3 = waveform{0, 3, 4}; // i-iv-v
+
+wave1(i) = progression1, int(i) : rdtable;
+wave2(i) = progression2, int(i) : rdtable;
+wave3(i) = progression3, int(i) : rdtable;
+wave4(i) = progression4, int(i) : rdtable;
+
+wave(i) = i : sel_wave
+with {
+    sel_wave(i) = wave1(i), wave2(i), wave3(i), wave4(i) : ba.selectn(4, (hslider("/input/progression", 0, 0, 1, 1)));
+};
+
+progression = wave;
+
+// progression = ba.selectmulti()      
+// progression = (num, notes)
+// with {
+//     num = progression1, progression2 : ba.selectn(4, int(2 * hslider("/input/progression", 0, 0, 1, 1)));
+//     notes = progression1, progression2 : ba.selectn(4, int(1 + 2 * hslider("/input/progression", 0, 0, 1, 1)));
+// };
+
+// progression = (length, degrees)
+// with {
+//     length = progression1, progression2 : ba.selectn(4, int(2 * hslider("/input/progression", 0, 0, 1, 1)));
+//     degrees = progression1, progression2 : ba.selectn(4, int(1 + 2 * hslider("/input/progression", 0, 0, 1, 1)));
+// };
+
+// progression = ba.selectmulti(ma.SR/10, (progression1, progression2), hslider("/input/progression", 0, 0, 1, 1));
 
 key = 3; 
 
@@ -76,7 +110,7 @@ percussion = djembe_beat : pm.djembe(ba.midikey2hz(key + 12 * 6), 0, 1, 1) : ch(
 
 not = select2(_ > 0, 0, 1);
 
-marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2));
+marimba_beat = not(pulse(0.35, bpm/8) * pulse(0.5, bpm) + pulse(0.2, bpm/4) * pulse(0.5, bpm/2)) <: attach(_, vbargraph("/output/log", 0, 100));
 marimba_notes = rand_note(minor_scale, 7) : ba.latch(djembe_beat) : _ + 12 * 2 + key;
 marimba =  marimba_beat : pm.marimbaModel(marimba_notes, 1) : ch(0.5, 0.2);
 
@@ -90,12 +124,12 @@ kick_beat = beat(bpm) <: attach(_, an.amp_follower_ar(0.001, 0.001) > 0 : vbargr
 kick = kick_beat : sy.kick(60, 0, 0.0001, 0.5, 2) : ch(0.5, 0.7);
 
 degree_num = ba.counter(gate) % 4;
-degree_note = rdtable(progression2, degree_num);
+degree_note = degree_num : progression;
 
 gate = beat(bpm/8);
 simple_pad(gate) =  par(i, 3, filt_tri(gate)) :> _ / 3;
 chords = degree_note : +(4 * 12 + key) : minor_chord : par(i, 3, ba.midikey2hz) : simple_pad(gate) <: _, _;
 chords_reverb = chords : reverb(0.5) <: par(i, 2, fi.highpass(2, 250));
 
-log_beat = beat(bpm) <: attach(_, vbargraph("/output/log", 0, 100)) <: _, _ ;//attach(beat(bpm), vbargraph("/output/log", 0, 1)) * 0.00001 <: _, _;
+log_beat = beat(bpm) <: _, _ ;//attach(beat(bpm), vbargraph("/output/log", 0, 1)) * 0.00001 <: _, _;
 process = chords_reverb, percussion, kick, hat, marimba :> _ /3 , _ /3;

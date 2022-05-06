@@ -3,6 +3,7 @@ import spectrometer from "./spectrometer"
 import oscilloscope from "./oscilloscope"
 import slider from "./slider"
 import button from "./button"
+import select from "./select"
 
 let clean: () => void;
 
@@ -45,12 +46,13 @@ function loadPluginAndStartVis() {
       )
       const cl4 = button(document.getElementById("restart")! as HTMLButtonElement, (value: number) => node.setParamValue("/melody/input/restart", value)
       )
-
+      const cl5 = select(document.getElementById("progression")! as HTMLSelectElement, (value: number) => node.setParamValue("/melody/input/progression", value))
       clean = () => {
         cl1()
         cl2()
         cl3()
         cl4()
+        cl5()
       }
     }
   })
