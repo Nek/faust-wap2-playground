@@ -99,7 +99,7 @@ const PROGRESSIONS = [
   "I-vi-IV-V",
   "I-V-vi-IV",
   "I-IV-V-IV",
-  "v-IV-I-V",
+  "vi-IV-I-V",
   "I-IV-ii-V",
   "I-IV-I-V"
 ]
