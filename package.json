@@ -7,7 +7,7 @@
   "scripts": {
     "start": "vite --open & npm-watch",
     "build": "tsc && vite build",
-    "deploy": "cp -r dist /tmp/dist & cd /tmp/dist & git init & git add -A & git commit -m Deploy &git remote add origin git@github.com:Nek/faust-sandbox-deploy.git & git push origin master --force",
+    "deploy": "scripts/deploy",
     "preview": "vite preview",
     "compile": "faust2wasm dsp/melody.dsp -worklet && rm melody.js melody-processor.js && mv melody.wasm assets"
   },
