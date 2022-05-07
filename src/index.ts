@@ -41,6 +41,8 @@ unlockAudioContext(ctx)
 const node = await loadPlugin(ctx, "./melody.wasm")
 const analyser = ctx.createAnalyser()
 const timeDomain = new Uint8Array(analyser.fftSize)
+const bufferLength = analyser.frequencyBinCount
+const floatFrequencyData = new Float32Array(bufferLength)
 if (node) {
   node.setOutputParamHandler((path: string, value: number | undefined) => {
     console.log(path, value)
@@ -155,11 +157,10 @@ const app = () => {
         })
     }
   }
-  
+
   const oscilloscope = canvas2D({
-    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-    },
-    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {},
+    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
       const x0 = 0
       const y0 = 0
       const width = _el.width
@@ -179,6 +180,39 @@ const app = () => {
       }
 
       ctx.stroke()
+    }
+  })
+
+  const INCREMENT_PER_FRAME = 1
+  const COLOR_GAIN = 19
+  const BASE_COLOR_HUE = 120
+
+  const spectrometer = canvas2D({
+    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {},
+    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+      analyser.getFloatFrequencyData(floatFrequencyData)
+
+      const canvasHeightUnit = _el.height / bufferLength
+
+      for (let i = 0; i < bufferLength; i++) {
+        const output = Math.pow(1.8, floatFrequencyData[i] / COLOR_GAIN)
+        const colorShift = +BASE_COLOR_HUE + i / 3
+
+        ctx.fillStyle = `hsl(${360 * -output + colorShift}deg, 100%, ${
+          output * 100
+        }%)`
+        ctx.fillRect(
+          _el.width - INCREMENT_PER_FRAME,
+          -i * canvasHeightUnit + _el.height,
+          INCREMENT_PER_FRAME,
+          canvasHeightUnit
+        )
+      }
+
+      ctx.save()
+      ctx.translate(-INCREMENT_PER_FRAME, 0)
+      ctx.drawImage(_el, 0, 0)
+      ctx.restore()
     }
   })
 
@@ -294,13 +328,14 @@ const app = () => {
     // return hdom-canvas component with embedded GUI
     return [
       "div",
-      [oscilloscope, { width, height: 100}],
+      [oscilloscope, { width, height: 100 }],
+      [spectrometer, {width, height: 100}],
       ,
       [
         _canvas,
         {
           width,
-          height: height - 100,
+          height: height - 200,
           style: { background: gui.theme.globalBg, cursor: gui.cursor },
           oncontextmenu: (e: Event) => e.preventDefault(),
           ...gui.attribs
