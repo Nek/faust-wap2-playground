@@ -256,7 +256,7 @@ const app = () => {
       DB.resetIn(["bpm"], res)
     }
 
-    if (buttonH(gui, row3, "resync", "Resync")) {
+    if (buttonH(gui, row3, "resync", "RESYNC")) {
       node?.setParamValue(path("reset"), 1)
       node?.setParamValue(path("reset"), 0)
     }
