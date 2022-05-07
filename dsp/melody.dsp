@@ -1,17 +1,17 @@
 declare name "melody";
 import("stdfaust.lib");
 
-minor_scale_wave = waveform{0, 2, 3, 5, 7, 8, 10, 0, 2, 3, 5, 7, 8, 10};
-major_scale_wave = waveform{0, 2, 4, 5, 7, 9, 11, 0, 2, 4, 5, 7, 9, 11};
+minor_scale_wave = waveform{0, 2, 3, 5, 7, 8, 10, 12, 14, 15, 17, 19, 20, 22};
+major_scale_wave = waveform{0, 2, 4, 5, 7, 9, 11, 12, 14, 16, 17, 19, 21, 23};
 
 minor_scale(n) = minor_scale_wave, n : rdtable;
 major_scale(n) = minor_scale_wave, n : rdtable;
 
-triad(degree, octave, scale) = note1, note2, note3
+triad(degree, scale) = note1, note2, note3
 with {
-    note1 = scale(degree) + octave * 12;
-    note2 = scale(degree + 2) + octave * 12;
-    note3 = scale(degree + 4) + octave * 12;
+    note1 = scale(degree);
+    note2 = scale(degree + 2);
+    note3 = scale(degree + 4);
 };
 
 wave_i_iv_III_VI = waveform{0, 0, 3, 2, 5};
@@ -73,9 +73,6 @@ bpm = hslider("/input/bpm", 118, 30, 180, 0.1);
 key = hslider("/input/key", 0, 0, 11, 1);
 input_scale = hslider("/input/scale", 0, 0, 1, 1);
 
-gate = beat(bpm);
-
-degree_at_step = progression(ba.counter(gate) % 4 + 1);
 is_minor = progression(0);
 
 
@@ -93,7 +90,7 @@ hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : _ * ba.lin2LogGain(hslider("/i
 
 scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, is_minor);
 
-rand_note = int(7 * (noise + 1)/2) : scale;
+rand_note = int(7 * (noise + 1)/2) : scale : _ + key;
 
 djembe_beat = (pattern1 + pattern2)*pattern3
 with {
@@ -110,9 +107,15 @@ with {
     pattern3 = pulse(0.2, bpm/4);
     pattern4 = pulse(0.5, bpm/2);
 };
-marimba_notes = rand_note : ba.latch(marimba_beat) : _ + 1 * 12 + key : ba.midikey2hz;
+marimba_notes = rand_note : ba.latch(marimba_beat) : _ + 1 * 12 : ba.midikey2hz;
 marimba = rand_velocity(marimba_beat) : pm.marimbaModel(marimba_notes, 1) : _ * ba.lin2LogGain(hslider("/input/marimba/volume", 0, 0, 1, 0.0001))  : fi.highpass(2, 250) : sp.panner(0.7);
 
-chords = triad(degree_at_step, 5, major_scale)  : par(i, 3, _ + key) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : _ *  ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)) <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
+gate = beat(bpm/4);
+degree_at_step = progression(ba.counter(gate) % 4 + 1);
+chords = triad(degree_at_step, major_scale)  : par(i, 3, _ + key + 12*4) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : _ *  ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)) <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
 
 process =  kick, hat, djembe, marimba, chords :> _ / 2, _ / 2;
+// 
+// 0, 2, 3, 5, 7, 8, 10, 0+12, 2+12, 3+12, 5+12, 7+12, 8+12, 10+12
+// key + 0, key + 2, key + 3, ...
+// 0        1        
