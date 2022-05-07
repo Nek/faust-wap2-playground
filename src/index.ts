@@ -91,18 +91,16 @@ interface AppState {
 }
 
 const PROGRESSIONS = [
-  "i - iv - III - VI",
-  "i - iv - VI - v",
-  "i - VI - III - VII",
-  "i - VI - III - iv",
-  "I - V - vi - IV",
-  "I - vi - IV - V",
-  "I - IV - V - IV",
-  "vi - IV - I - V",
-  "I - IV - ii - V",
-  "I - IV - I - V",
-  "i - V - i - iv",
-  "vi - V - IV - III"
+  "i-iv-VI-v",
+  "i-iv-III-VI",
+  "i-VI-III-VII",
+  "i-VI-III-iv",
+  "I-vi-IV-V",
+  "I-V-vi-IV",
+  "I-IV-V-IV",
+  "v-IV-I-V",
+  "I-IV-ii-V",
+  "I-IV-I-V",
 ]
 const KEYS = [
   'C',
@@ -197,13 +195,44 @@ const app = () => {
 
     let res: any
 
-    const row1 = grid.nest(5, [1, 10])
-    const row2 = grid.nest(5, [1, 3])
-    const row3 = grid.nest(1, [5, 5])
+    const row1 = grid.nest(1, [1, 5])
+
     const path = (name: string) => `/melody/input/${name}`
 
+    textLabel(gui, row1, "PROGRESSION")
+    if (
+      (res = dropdown(
+        gui,
+        row1,
+        "progression",
+        state.progression,
+        PROGRESSIONS,
+        ""
+      )) !== undefined
+    ) {
+      node?.setParamValue(path("progression"), res)
+      node?.setParamValue(path("scale"), res > 3 ? 1 : 0)
+      DB.resetIn(["progression"], res)
+    }
+    textLabel(gui, row1, "KEY")
+    if (
+      (res = dropdown(
+        gui,
+        row1,
+        "key",
+        state.key,
+        KEYS,
+        ""
+      )) !== undefined
+    ) {
+      node?.setParamValue(path("key"), res)
+      DB.resetIn(["key"], res)
+    }
+
+    const row2 = grid.nest(5, [1, 10])
+
     CHANNEL_PARAMS.forEach((param, i) => {
-      const column = row1.nest(1)
+      const column = row2.nest(1)
       if (
         (res = sliderV(
           gui,
@@ -224,10 +253,12 @@ const app = () => {
       textLabel(gui, column, CHANNEL_LABELS[i])
     })
 
+    const row3 = grid.nest(5, [1, 3])
+
     if (
       (res = ring(
         gui,
-        row2,
+        row3,
         "bpm",
         30,
         180,
@@ -241,35 +272,6 @@ const app = () => {
     ) {
       node?.setParamValue(path("bpm"), res)
       DB.resetIn(["bpm"], res)
-    }
-    textLabel(gui, row3, "PROGRESSION")
-    if (
-      (res = dropdown(
-        gui,
-        row3,
-        "progression",
-        state.progression,
-        PROGRESSIONS,
-        ""
-      )) !== undefined
-    ) {
-      node?.setParamValue(path("progression"), res)
-      node?.setParamValue(path("scale"), res > 3 ? 1 : 0)
-      DB.resetIn(["progression"], res)
-    }
-    textLabel(gui, row3, "KEY")
-    if (
-      (res = dropdown(
-        gui,
-        row3,
-        "key",
-        state.key,
-        KEYS,
-        ""
-      )) !== undefined
-    ) {
-      node?.setParamValue(path("key"), res)
-      DB.resetIn(["key"], res)
     }
 
     gui.end()
