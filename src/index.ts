@@ -8,6 +8,7 @@ if (import.meta.hot) {
 import { Atom } from "@thi.ng/atom/atom"
 import { canvas } from "@thi.ng/hdom-canvas"
 import { DEFAULT_THEME, Key, type GUITheme } from "@thi.ng/imgui/api"
+import { buttonH } from "@thi.ng/imgui/components/button"
 import { dropdown } from "@thi.ng/imgui/components/dropdown"
 import { ring } from "@thi.ng/imgui/components/ring"
 import { sliderV } from "@thi.ng/imgui/components/sliderv"
@@ -86,7 +87,7 @@ interface AppState {
   theme: number
   channels: number[]
   bpm: number
-  progression: number,
+  progression: number
   key: number
 }
 
@@ -100,22 +101,9 @@ const PROGRESSIONS = [
   "I-IV-V-IV",
   "v-IV-I-V",
   "I-IV-ii-V",
-  "I-IV-I-V",
+  "I-IV-I-V"
 ]
-const KEYS = [
-  'C',
-  'C#',
-  'D',
-  'D#',
-  'E',
-  'F',
-  'F#',
-  'G',
-  'G#',
-  'A',
-  'A#',
-  'B'
-]
+const KEYS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 
 // main immutable app state wrapper (with time travel)
 const DB = new Atom<AppState>({
@@ -123,7 +111,7 @@ const DB = new Atom<AppState>({
   channels: [0, 0, 0, 0, 0],
   bpm: 118,
   progression: 0,
-  key: 0,
+  key: 0
 })
 
 // theme merging helper
@@ -184,11 +172,14 @@ const app = () => {
     const state = DB.deref()
     // setup initial layout (single column)
     const width = Math.min(window.innerWidth, window.innerHeight)
-    const rowH = width/20
+    const rowH = width / 20
     const grid = gridLayout(10, 10, width - 20, 1, rowH, 4)
 
-    const size = width * 18 / 600
-    gui.setTheme({...themeForID(state.theme), font: `${size}px 'IBM Plex Mono'`})
+    const size = (width * 18) / 600
+    gui.setTheme({
+      ...themeForID(state.theme),
+      font: `${size}px 'IBM Plex Mono'`
+    })
 
     // start frame
     gui.begin(draw)
@@ -215,16 +206,7 @@ const app = () => {
       DB.resetIn(["progression"], res)
     }
     textLabel(gui, row1, "KEY")
-    if (
-      (res = dropdown(
-        gui,
-        row1,
-        "key",
-        state.key,
-        KEYS,
-        ""
-      )) !== undefined
-    ) {
+    if ((res = dropdown(gui, row1, "key", state.key, KEYS, "")) !== undefined) {
       node?.setParamValue(path("key"), res)
       DB.resetIn(["key"], res)
     }
@@ -253,7 +235,7 @@ const app = () => {
       textLabel(gui, column, CHANNEL_LABELS[i])
     })
 
-    const row3 = grid.nest(5, [1, 3])
+    const row3 = grid.nest(5, [2, 3])
 
     if (
       (res = ring(
@@ -272,6 +254,11 @@ const app = () => {
     ) {
       node?.setParamValue(path("bpm"), res)
       DB.resetIn(["bpm"], res)
+    }
+
+    if (buttonH(gui, row3, "resync", "Resync")) {
+      node?.setParamValue(path("reset"), 1)
+      node?.setParamValue(path("reset"), 0)
     }
 
     gui.end()
