@@ -29,6 +29,7 @@
     "@thi.ng/geom": "^3.2.2",
     "@thi.ng/hdom": "^9.1.6",
     "@thi.ng/hdom-canvas": "^4.1.10",
+    "@thi.ng/hdom-components": "^5.1.7",
     "@thi.ng/hiccup-carbon-icons": "^3.1.4",
     "@thi.ng/imgui": "^2.1.10",
     "@thi.ng/layout": "^2.1.5",

@@ -17,14 +17,13 @@ import { IMGUI } from "@thi.ng/imgui/gui"
 import { gridLayout } from "@thi.ng/layout/grid-layout"
 import { PI } from "@thi.ng/math/api"
 import { gestureStream } from "@thi.ng/rstream-gestures"
-import { fromAtom } from "@thi.ng/rstream/atom"
 import { fromDOMEvent } from "@thi.ng/rstream/event"
-import { merge } from "@thi.ng/rstream/merge"
-import { sidechainPartitionRAF } from "@thi.ng/rstream/sidechain-partition"
-import { sync } from "@thi.ng/rstream/sync"
+import { fromRAF } from "@thi.ng/rstream/raf"
 import { float } from "@thi.ng/strings/float"
 import { updateDOM } from "@thi.ng/transducers-hdom"
 import { map } from "@thi.ng/transducers/map"
+import { Vec2 } from "@thi.ng/vectors"
+import { canvas2D } from "@thi.ng/hdom-components"
 import loadPlugin from "./loadPlugin"
 
 const unlockAudioContext = (ctx: AudioContext) => {
@@ -40,11 +39,14 @@ const ctx = new AudioContext()
 unlockAudioContext(ctx)
 
 const node = await loadPlugin(ctx, "./melody.wasm")
+const analyser = ctx.createAnalyser()
+const timeDomain = new Uint8Array(analyser.fftSize)
 if (node) {
   node.setOutputParamHandler((path: string, value: number | undefined) => {
     console.log(path, value)
   })
   node.connect(ctx.destination)
+  node.connect(analyser)
 }
 
 // define theme colors in RGBA format for future compatibility with
@@ -131,47 +133,61 @@ const app = () => {
   const _canvas = {
     ...canvas,
     init(canv: HTMLCanvasElement) {
-      // add event streams to main stream combinator
-      // in order to trigger GUI updates...
-      main.add(
-        // merge all event streams into a single input to `main`
-        // (we don't actually care about their actual values and merely
-        // use them as mechanism to trigger updates)
-        merge<any, any>({
-          src: [
-            // mouse & touch events
-            gestureStream(canv, {}).subscribe({
-              next(e) {
-                gui.setMouse(e.pos, e.buttons)
-              }
-            }),
-            // keydown & undo/redo handler:
-            fromDOMEvent(window, "keydown").subscribe({
-              next(e) {
-                if (e.key === Key.TAB) {
-                  e.preventDefault()
-                }
+      gestureStream(canv, {}).subscribe({
+        next(e) {
+          gui.setMouse(e.pos, e.buttons)
+        }
+      }),
+        // keydown & undo/redo handler:
+        fromDOMEvent(window, "keydown").subscribe({
+          next(e) {
+            if (e.key === Key.TAB) {
+              e.preventDefault()
+            }
 
-                gui.setKey(e)
-              }
-            }),
-            fromDOMEvent(window, "keyup").subscribe({
-              next(e) {
-                gui.setKey(e)
-              }
-            })
-          ]
+            gui.setKey(e)
+          }
+        }),
+        fromDOMEvent(window, "keyup").subscribe({
+          next(e) {
+            gui.setKey(e)
+          }
         })
-      )
     }
   }
+  
+  const oscilloscope = canvas2D({
+    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+    },
+    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+      const x0 = 0
+      const y0 = 0
+      const width = _el.width
+      const height = _el.height
+      analyser.getByteTimeDomainData(timeDomain)
+      const step = width / timeDomain.length
+
+      ctx.clearRect(0, 0, width, height)
+
+      ctx.beginPath()
+
+      for (let i = 0; i < timeDomain.length; i += 4) {
+        const percent = timeDomain[i] / 256
+        const x = x0 + i * step
+        const y = y0 + height * percent
+        ctx.lineTo(x, y)
+      }
+
+      ctx.stroke()
+    }
+  })
 
   // main GUI update function
   const updateGUI = (draw: boolean) => {
     // obtain atom value
     const state = DB.deref()
     // setup initial layout (single column)
-    const width = Math.min(window.innerWidth, window.innerHeight)
+    const width = window.innerWidth
     const rowH = width / 20
     const grid = gridLayout(10, 10, width - 20, 1, rowH, 4)
 
@@ -273,20 +289,25 @@ const app = () => {
     // call updateGUI twice to compensate for lack of regular 60fps update
     // Note: Unless your GUI is super complex, this cost is pretty neglible
     // and no actual drawing takes place here ...
-    updateGUI(false)
+    // updateGUI(false)
     updateGUI(true)
     // return hdom-canvas component with embedded GUI
     return [
-      _canvas,
-      {
-        width,
-        height,
-        style: { background: gui.theme.globalBg, cursor: gui.cursor },
-        oncontextmenu: (e: Event) => e.preventDefault(),
-        ...gui.attribs
-      },
-      // IMGUI implements IToHiccup interface so just supply as is
-      gui
+      "div",
+      [oscilloscope, { width, height: 100}],
+      ,
+      [
+        _canvas,
+        {
+          width,
+          height: height - 100,
+          style: { background: gui.theme.globalBg, cursor: gui.cursor },
+          oncontextmenu: (e: Event) => e.preventDefault(),
+          ...gui.attribs
+        },
+        // IMGUI implements IToHiccup interface so just supply as is
+        gui
+      ]
     ]
   }
 }
@@ -296,14 +317,15 @@ const app = () => {
 // once the 1st frame renders, the canvas component will create and attach
 // event streams to this stream sync, which are then used to trigger future
 // updates on demand...
-const main = sync({
-  src: {
-    state: fromAtom(DB)
-  }
-})
+// const main = sync({
+//   src: {
+//     state: fromAtom(DB)
+//   }
+// })
 
 // subscription & transformation of app state stream. uses a RAF
 // sidechain to buffer intra-frame state updates. then only passes the
 // most recent one to `app()` and its resulting UI tree to the
 // `updateDOM()` transducer
-sidechainPartitionRAF(main).transform(map(app()), updateDOM())
+fromRAF().transform(map(app()), updateDOM())
+// sidechainPartitionRAF(main).transform(map(app()), updateDOM())
