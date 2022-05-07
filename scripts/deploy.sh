@@ -6,6 +6,9 @@ if [ -n "$(git status --porcelain)" ]; then
 else
     rm -rf /tmp/dist;
     cp -r dist /tmp/dist;
+    echo "<!--" >> /tmp/dist/index.html;
+    cat .git/refs/heads/master >> /tmp/dist/index.html;
+    echo "-->" >> /tmp/dist/index.html;
     cd /tmp/dist;
     git init;
     git add -A;
