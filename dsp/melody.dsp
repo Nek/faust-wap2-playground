@@ -91,7 +91,7 @@ kick = kick_beat : sy.kick(ba.midikey2hz(key + 12 * 3), 0.05, 0.01, 60/bpm, 1): 
 hat_beat = beat(bpm)@ba.tempo(bpm*2);
 hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : _ * ba.lin2LogGain(hslider("/input/hat/volume", 0, 0, 1, 0.0001)) : sp.panner(0.3);
 
-scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, input_scale);
+scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, is_minor);
 
 rand_note = int(7 * (noise + 1)/2) : scale;
 
@@ -113,6 +113,6 @@ with {
 marimba_notes = rand_note : ba.latch(marimba_beat) : _ + 1 * 12 + key : ba.midikey2hz;
 marimba = rand_velocity(marimba_beat) : pm.marimbaModel(marimba_notes, 1) : _ * ba.lin2LogGain(hslider("/input/marimba/volume", 0, 0, 1, 0.0001))  : fi.highpass(2, 250) : sp.panner(0.7);
 
-chords = triad(degree_at_step, 5, major_scale)  : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : _ *  ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)) <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
+chords = triad(degree_at_step, 5, major_scale)  : par(i, 3, _ + key) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : _ *  ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)) <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
 
 process =  kick, hat, djembe, marimba, chords :> _ / 2, _ / 2;
