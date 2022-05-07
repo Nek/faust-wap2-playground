@@ -115,7 +115,3 @@ degree_at_step = progression(ba.counter(gate) % 4 + 1);
 chords = triad(degree_at_step, major_scale)  : par(i, 3, _ + key + 12*4) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : _ *  ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)) <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
 
 process =  kick, hat, djembe, marimba, chords :> _ / 2, _ / 2;
-// 
-// 0, 2, 3, 5, 7, 8, 10, 0+12, 2+12, 3+12, 5+12, 7+12, 8+12, 10+12
-// key + 0, key + 2, key + 3, ...
-// 0        1        
