@@ -7,7 +7,7 @@
   "scripts": {
     "start": "vite --open & npm-watch",
     "build": "tsc && vite build",
-    "deploy": "scripts/deploy",
+    "deploy": "bash ./scripts/deploy.sh",
     "preview": "vite preview",
     "compile": "faust2wasm dsp/melody.dsp -worklet && rm melody.js melody-processor.js && mv melody.wasm assets"
   },
