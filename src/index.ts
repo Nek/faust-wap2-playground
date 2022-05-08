@@ -5,6 +5,7 @@ if (import.meta.hot) {
   })
 }
 
+import { adaptDPI, isHighDPI } from "@thi.ng/adapt-dpi"
 import { Atom } from "@thi.ng/atom/atom"
 import { canvas } from "@thi.ng/hdom-canvas"
 import { DEFAULT_THEME, Key, type GUITheme } from "@thi.ng/imgui/api"
@@ -78,7 +79,7 @@ const F1 = float(0)
 const F2 = float(2)
 
 // UI constants
-const FONT = "12px 'IBM Plex Mono'"
+const FONT = `${(320 * 30) / 600}px 'IBM Plex Mono'`
 const CHANNEL_LABELS = ["KICK", "HATS", "CHRD", "MRMB", "DJMB"]
 const CHANNEL_PARAMS = [
   "kick/volume",
@@ -159,23 +160,21 @@ const app = () => {
   }
 
   const oscilloscope = canvas2D({
-    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {},
-    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-      const x0 = 0
-      const y0 = 0
-      const width = _el.width
-      const height = _el.height
+    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+      const width = args.width
+      const height = args.height
+      adaptDPI(_el, width, height)
       analyser.getByteTimeDomainData(timeDomain)
-      const step = width / timeDomain.length
+      const step = width / timeDomain.length * (isHighDPI() ? 2 : 1)
 
       ctx.clearRect(0, 0, width, height)
 
       ctx.beginPath()
 
       for (let i = 0; i < timeDomain.length; i += 4) {
-        const percent = timeDomain[i] / 256
-        const x = x0 + i * step
-        const y = y0 + height * percent
+        const percent = timeDomain[i] / 256 * (isHighDPI() ? 2 : 1)
+        const x = 0 + i * step
+        const y = 0 + height * percent
         ctx.lineTo(x, y)
       }
 
@@ -183,13 +182,18 @@ const app = () => {
     }
   })
 
-  const INCREMENT_PER_FRAME = 1
-  const COLOR_GAIN = 19
-  const BASE_COLOR_HUE = 120
-
   const spectrometer = canvas2D({
-    init(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {},
-    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
+    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+      const INCREMENT_PER_FRAME = 1
+      const COLOR_GAIN = 19
+      const BASE_COLOR_HUE = 120
+
+      const canvasData = ctx.getImageData(0, 0, _el.width, _el.height)
+
+      adaptDPI(_el, args.width, args.height)
+
+      ctx.putImageData(canvasData, 0, 0)
+
       analyser.getFloatFrequencyData(floatFrequencyData)
 
       const canvasHeightUnit = _el.height / bufferLength
@@ -217,15 +221,15 @@ const app = () => {
   })
 
   // main GUI update function
-  const updateGUI = (draw: boolean) => {
+  const updateGUI = (width: number, height: number) => {
+    const draw = true
     // obtain atom value
     const state = DB.deref()
     // setup initial layout (single column)
-    const width = window.innerWidth
-    const rowH = width / 20
+    const rowH = height / 40
     const grid = gridLayout(10, 10, width - 20, 1, rowH, 4)
 
-    const size = (width * 18) / 600
+    const size = (height / 40) 
     gui.setTheme({
       ...themeForID(state.theme),
       font: `${size}px 'IBM Plex Mono'`
@@ -261,7 +265,7 @@ const app = () => {
       DB.resetIn(["key"], res)
     }
 
-    const row2 = grid.nest(5, [1, 10])
+    const row2 = grid.nest(5, [1, 14])
 
     CHANNEL_PARAMS.forEach((param, i) => {
       const column = row2.nest(1)
@@ -274,7 +278,7 @@ const app = () => {
           1,
           0.01,
           state.channels[i],
-          8,
+          12,
           "",
           F2
         )) !== undefined
@@ -324,18 +328,19 @@ const app = () => {
     // Note: Unless your GUI is super complex, this cost is pretty neglible
     // and no actual drawing takes place here ...
     // updateGUI(false)
-    updateGUI(true)
+    updateGUI(width, height / 3 * 2)
     // return hdom-canvas component with embedded GUI
     return [
       "div",
-      [oscilloscope, { width, height: 100 }],
-      [spectrometer, {width, height: 100}],
+      [oscilloscope, { width, height: height / 3 / 2 }],
+      ["br"],
+      [spectrometer, { width, height: height / 3 / 2 }],
       ,
       [
         _canvas,
         {
           width,
-          height: height - 200,
+          height: height / 3 * 2,
           style: { background: gui.theme.globalBg, cursor: gui.cursor },
           oncontextmenu: (e: Event) => e.preventDefault(),
           ...gui.attribs
