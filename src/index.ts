@@ -185,7 +185,7 @@ const app = () => {
   const spectrometer = canvas2D({
     update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
       const INCREMENT_PER_FRAME = 1
-      const COLOR_GAIN = 19
+      const COLOR_GAIN = 25
       const BASE_COLOR_HUE = 120
 
       const canvasData = ctx.getImageData(0, 0, _el.width, _el.height)
