@@ -95,7 +95,7 @@ scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, is_minor);
 
 rand_note = int(7 * (noise + 1)/2) : scale : _ + key;
 
-djembe_beat = (pattern1 + pattern2)*pattern3
+djembe_beat = (pattern1 + pattern2) * pattern3
 with {
     pattern3 = pulse(0.75, bpm/2);
     pattern1 = pulse(0.4, bpm/1.5);
@@ -113,7 +113,7 @@ with {
 marimba_notes = rand_note : ba.latch(marimba_beat) : _ + 1 * 12 : ba.midikey2hz;
 marimba = rand_velocity(marimba_beat) : pm.marimbaModel(marimba_notes, 1) : marimba_volume : fi.highpass(2, 250) : sp.panner(0.7);
 
-gate = beat(bpm/4);
+gate = beat(bpm/8);
 degree_at_step = progression(ba.counter(gate) % 4 + 1);
 chords = triad(degree_at_step, major_scale)  : par(i, 3, _ + key + 12*4) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : chords_volume <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
 
