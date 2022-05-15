@@ -86,13 +86,13 @@ with {
     env = en.adsr(0.0001, 0, 1, r, gate);
 };
 
-// kick_beat = beat(bpm);
-kick_beat = par(i, numSteps, checkbox("step%i")) : ba.selectn(numSteps, ba.counter(gate) % numSteps) : en.adsr(0.001, 60 / speed / 8, 0, 0)
+kick_beat = par(i, numSteps, checkbox("step%i")) : ba.selectn(numSteps, c % numSteps) : _ * gate
 with {
     num = i + 1;
     numSteps = 16;
     speed = bpm*4;
     gate = beat(speed);
+    c = ba.counter(gate) % numSteps;
 };
 kick = kick_beat : sy.kick(ba.midikey2hz(key + 12 * 3), 0.05, 0.01, 60/bpm/4, 1): kick_volume : sp.panner(0.5);
 
