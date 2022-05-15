@@ -45,10 +45,10 @@ bpm = hslider("bpm", 118, 30, 180, 0.1);
 transpose = hslider("transpose", 0, -2, 2, 1) * 12;
 key = hslider("key", 0, 0, 11, 1) + transpose;
 kick_volume = _ * si.smoo(ba.lin2LogGain(hslider("kick/volume", 0.5, 0, 1, 0.0001)));
-hat_volume = _ * si.smoo(ba.lin2LogGain(hslider("hat/volume", 0, 0, 1, 0.0001)));
-djembe_volume = _ * si.smoo(ba.lin2LogGain(hslider("djembe/volume", 0, 0, 1, 0.0001)));
-marimba_volume = _ * si.smoo(ba.lin2LogGain(hslider("marimba/volume", 0, 0, 1, 0.0001)));
-chords_volume = _ *  si.smoo(ba.lin2LogGain(hslider("chords/volume", 0, 0, 1, 0.0001)));
+hat_volume = _ * si.smoo(ba.lin2LogGain(hslider("hat/volume", 0.5, 0, 1, 0.0001)));
+djembe_volume = _ * si.smoo(ba.lin2LogGain(hslider("djembe/volume", 0.5, 0, 1, 0.0001)));
+marimba_volume = _ * si.smoo(ba.lin2LogGain(hslider("marimba/volume", 0.5, 0, 1, 0.0001)));
+chords_volume = _ *  si.smoo(ba.lin2LogGain(hslider("chords/volume", 0.5, 0, 1, 0.0001)));
 
 progression(n) = sel_wave(n)
 with {
@@ -86,7 +86,7 @@ with {
     env = en.adsr(0.0001, 0, 1, r, gate);
 };
 
-kick_beat = par(i, numSteps, checkbox("step%i")) : ba.selectn(numSteps, c % numSteps) : _ * gate
+kick_beat = par(i, numSteps, checkbox("kickStep%i")) : ba.selectn(numSteps, c % numSteps) : _ * gate
 with {
     num = i + 1;
     numSteps = 16;
@@ -96,8 +96,15 @@ with {
 };
 kick = kick_beat : sy.kick(ba.midikey2hz(key + 12 * 3), 0.05, 0.01, 60/bpm/4, 1): kick_volume : sp.panner(0.5);
 
-hat_beat = beat(bpm)@ba.tempo(bpm*2);
-hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : hat_volume : sp.panner(0.3);
+hat_beat = par(i, numSteps, checkbox("hatStep%i")) : ba.selectn(numSteps, c % numSteps) : _ * gate
+with {
+    num = i + 1;
+    numSteps = 16;
+    speed = bpm*4;
+    gate = beat(speed);
+    c = ba.counter(gate) % numSteps;
+};
+hat = hat_beat : sy.hat(220, 12000, 0.005, 0.05) : hat_volume : sp.panner(0.3);
 
 scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, is_minor);
 

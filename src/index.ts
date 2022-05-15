@@ -9,7 +9,7 @@ import { adaptDPI, isHighDPI } from "@thi.ng/adapt-dpi"
 import { Atom } from "@thi.ng/atom/atom"
 import { canvas } from "@thi.ng/hdom-canvas"
 import { DEFAULT_THEME, Key, type GUITheme } from "@thi.ng/imgui/api"
-import { buttonH, buttonV } from "@thi.ng/imgui/components/button"
+import { buttonV } from "@thi.ng/imgui/components/button"
 import { dropdown } from "@thi.ng/imgui/components/dropdown"
 import { ring } from "@thi.ng/imgui/components/ring"
 import { sliderV } from "@thi.ng/imgui/components/sliderv"
@@ -26,6 +26,9 @@ import { map } from "@thi.ng/transducers/map"
 import { canvas2D } from "@thi.ng/hdom-components"
 import loadPlugin from "./loadPlugin"
 import { toggle } from "@thi.ng/imgui/components/toggle"
+import { Smush32 } from "@thi.ng/random"
+
+const rnd = new Smush32(0xdecafbad)
 
 const unlockAudioContext = (ctx: AudioContext) => {
   if (ctx.state !== "suspended") return
@@ -94,7 +97,8 @@ interface AppState {
   bpm: number
   progression: number
   key: number
-  steps: boolean[]
+  kickSteps: boolean[]
+  hatSteps: boolean[]
 }
 
 const PROGRESSIONS = [
@@ -114,11 +118,12 @@ const KEYS = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
 // main immutable app state wrapper (with time travel)
 const DB = new Atom<AppState>({
   theme: 0,
-  channels: [0, 0, 0, 0, 0],
+  channels: [0.5, 0.5, 0.5, 0.5, 0.5],
   bpm: 118,
   progression: 0,
   key: 0,
-  steps: new Array<boolean>(16).fill(false)
+  kickSteps: new Array<boolean>(16).fill(false),
+  hatSteps: new Array<boolean>(16).fill(false)
 })
 
 // theme merging helper
@@ -174,9 +179,9 @@ const app = () => {
       const height = args.height
       adaptDPI(_el, width, height)
       analyser.getByteTimeDomainData(timeDomain)
-      const step = (width / timeDomain.length) * (isHighDPI() ? 2 : 1)
+      const step = ( _el.width / timeDomain.length) * (isHighDPI() ? 2 : 1)
 
-      ctx.clearRect(0, 0, width, height)
+      ctx.clearRect(0, 0, _el.width, _el.width)
 
       ctx.beginPath()
 
@@ -236,6 +241,22 @@ const app = () => {
     }
   })
 
+  const path = (name: string) => `/melody/${name}`
+
+  const state = DB.deref()
+
+  state.kickSteps.forEach((step, i) => {
+      const res = rnd.float() > 0.5;
+      node?.setParamValue(path(`kickStep${i}`), res ? 1 : 0)
+      DB.resetIn(["kickSteps", i], res)
+  })
+
+  state.hatSteps.forEach((step, i) => {
+      const res = rnd.float() > 0.5;
+      node?.setParamValue(path(`hatStep${i}`), res ? 1 : 0)
+      DB.resetIn(["hatSteps", i], res)
+  })
+
   // main GUI update function
   const updateGUI = (width: number, height: number) => {
     const draw = true
@@ -258,8 +279,6 @@ const app = () => {
 
     const row1 = grid.nest(1, [1, 5])
 
-    const path = (name: string) => `/melody/${name}`
-
     textLabel(gui, row1, "PROGRESSION")
     if (
       (res = dropdown(
@@ -281,7 +300,7 @@ const app = () => {
       DB.resetIn(["key"], res)
     }
 
-    const row2 = grid.nest(5, [1, 14])
+    const row2 = grid.nest(5, [1, 8])
 
     CHANNEL_PARAMS.forEach((param, i) => {
       const column = row2.nest(1)
@@ -294,7 +313,7 @@ const app = () => {
           1,
           0.01,
           state.channels[i],
-          12,
+          8,
           "",
           F2
         )) !== undefined
@@ -333,11 +352,19 @@ const app = () => {
 
     const row4 = grid.nest(16)
 
-    state.steps.forEach((step, i) => {
-      if ((res = toggle(gui, row4, `step${i}`, state.steps[i], false, ``)) !== undefined) {
-        console.log(path(`step${i}`))
-        node?.setParamValue(path(`step${i}`), res ? 1 : 0)
-        DB.resetIn(["steps", i], res)
+    state.kickSteps.forEach((step, i) => {
+      if ((res = toggle(gui, row4, `kickStep${i}`, state.kickSteps[i], false, ``)) !== undefined) {
+        node?.setParamValue(path(`kickStep${i}`), res ? 1 : 0)
+        DB.resetIn(["kickSteps", i], res)
+      }
+    })
+
+    const row5 = grid.nest(16)
+
+    state.hatSteps.forEach((step, i) => {
+      if ((res = toggle(gui, row5, `hatStep${i}`, state.hatSteps[i], false, ``)) !== undefined) {
+        node?.setParamValue(path(`hatStep${i}`), res ? 1 : 0)
+        DB.resetIn(["hatSteps", i], res)
       }
     })
 
@@ -358,7 +385,7 @@ const app = () => {
     // return hdom-canvas component with embedded GUI
     return [
       "div",
-      [oscilloscope, { width, height: height / 3 / 2 }],
+      [oscilloscope, { width: width, height: height / 3 / 2 }],
       ["br"],
       [spectrometer, { width, height: height / 3 / 2 }],
       ,
