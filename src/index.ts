@@ -9,7 +9,7 @@ import { adaptDPI, isHighDPI } from "@thi.ng/adapt-dpi"
 import { Atom } from "@thi.ng/atom/atom"
 import { canvas } from "@thi.ng/hdom-canvas"
 import { DEFAULT_THEME, Key, type GUITheme } from "@thi.ng/imgui/api"
-import { buttonH } from "@thi.ng/imgui/components/button"
+import { buttonH, buttonV } from "@thi.ng/imgui/components/button"
 import { dropdown } from "@thi.ng/imgui/components/dropdown"
 import { ring } from "@thi.ng/imgui/components/ring"
 import { sliderV } from "@thi.ng/imgui/components/sliderv"
@@ -23,9 +23,9 @@ import { fromRAF } from "@thi.ng/rstream/raf"
 import { float } from "@thi.ng/strings/float"
 import { updateDOM } from "@thi.ng/transducers-hdom"
 import { map } from "@thi.ng/transducers/map"
-import { Vec2 } from "@thi.ng/vectors"
 import { canvas2D } from "@thi.ng/hdom-components"
 import loadPlugin from "./loadPlugin"
+import { toggle } from "@thi.ng/imgui/components/toggle"
 
 const unlockAudioContext = (ctx: AudioContext) => {
   if (ctx.state !== "suspended") return
@@ -94,6 +94,7 @@ interface AppState {
   bpm: number
   progression: number
   key: number
+  steps: boolean[]
 }
 
 const PROGRESSIONS = [
@@ -116,7 +117,8 @@ const DB = new Atom<AppState>({
   channels: [0, 0, 0, 0, 0],
   bpm: 118,
   progression: 0,
-  key: 0
+  key: 0,
+  steps: new Array<boolean>(16).fill(false)
 })
 
 // theme merging helper
@@ -160,19 +162,26 @@ const app = () => {
   }
 
   const oscilloscope = canvas2D({
-    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+    update(
+      _el: HTMLCanvasElement,
+      ctx: CanvasRenderingContext2D,
+      hctx,
+      time,
+      frame,
+      args
+    ) {
       const width = args.width
       const height = args.height
       adaptDPI(_el, width, height)
       analyser.getByteTimeDomainData(timeDomain)
-      const step = width / timeDomain.length * (isHighDPI() ? 2 : 1)
+      const step = (width / timeDomain.length) * (isHighDPI() ? 2 : 1)
 
       ctx.clearRect(0, 0, width, height)
 
       ctx.beginPath()
 
       for (let i = 0; i < timeDomain.length; i += 4) {
-        const percent = timeDomain[i] / 256 * (isHighDPI() ? 2 : 1)
+        const percent = (timeDomain[i] / 256) * (isHighDPI() ? 2 : 1)
         const x = 0 + i * step
         const y = 0 + height * percent
         ctx.lineTo(x, y)
@@ -183,7 +192,14 @@ const app = () => {
   })
 
   const spectrometer = canvas2D({
-    update(_el: HTMLCanvasElement, ctx: CanvasRenderingContext2D, hctx, time, frame, args) {
+    update(
+      _el: HTMLCanvasElement,
+      ctx: CanvasRenderingContext2D,
+      hctx,
+      time,
+      frame,
+      args
+    ) {
       const INCREMENT_PER_FRAME = 1
       const COLOR_GAIN = 25
       const BASE_COLOR_HUE = 120
@@ -229,7 +245,7 @@ const app = () => {
     const rowH = height / 40
     const grid = gridLayout(10, 10, width - 20, 1, rowH, 4)
 
-    const size = (height / 40) 
+    const size = height / 40
     gui.setTheme({
       ...themeForID(state.theme),
       font: `${size}px 'IBM Plex Mono'`
@@ -242,7 +258,7 @@ const app = () => {
 
     const row1 = grid.nest(1, [1, 5])
 
-    const path = (name: string) => `/melody/input/${name}`
+    const path = (name: string) => `/melody/${name}`
 
     textLabel(gui, row1, "PROGRESSION")
     if (
@@ -310,10 +326,20 @@ const app = () => {
       DB.resetIn(["bpm"], res)
     }
 
-    if (buttonH(gui, row3, "resync", "RESYNC")) {
+    if (buttonV(gui, row3, "resync", 3, "SYNC")) {
       node?.setParamValue(path("reset"), 1)
       node?.setParamValue(path("reset"), 0)
     }
+
+    const row4 = grid.nest(16)
+
+    state.steps.forEach((step, i) => {
+      if ((res = toggle(gui, row4, `step${i}`, state.steps[i], false, ``)) !== undefined) {
+        console.log(path(`step${i}`))
+        node?.setParamValue(path(`step${i}`), res ? 1 : 0)
+        DB.resetIn(["steps", i], res)
+      }
+    })
 
     gui.end()
   }
@@ -328,7 +354,7 @@ const app = () => {
     // Note: Unless your GUI is super complex, this cost is pretty neglible
     // and no actual drawing takes place here ...
     // updateGUI(false)
-    updateGUI(width, height / 3 * 2)
+    updateGUI(width, (height / 3) * 2)
     // return hdom-canvas component with embedded GUI
     return [
       "div",
@@ -340,7 +366,7 @@ const app = () => {
         _canvas,
         {
           width,
-          height: height / 3 * 2,
+          height: (height / 3) * 2,
           style: { background: gui.theme.globalBg, cursor: gui.cursor },
           oncontextmenu: (e: Event) => e.preventDefault(),
           ...gui.attribs

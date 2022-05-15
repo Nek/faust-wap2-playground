@@ -9,7 +9,7 @@
     "build": "tsc && vite build",
     "deploy": "npm run build && bash ./scripts/deploy.sh",
     "preview": "vite preview",
-    "compile": "faust2wasm dsp/melody.dsp -worklet && rm melody.js melody-processor.js && mv melody.wasm assets"
+    "compile": "cd dsp && faust2webaudiowast melody.dsp -opt && rm melody.html && mv melody.wasm ../assets"
   },
   "browser": {
     "process": false,

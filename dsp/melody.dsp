@@ -39,15 +39,16 @@ prog_I_IV_ii_V(n) = wave_I_IV_ii_V, int(n) : rdtable;
 prog_I_IV_I_V(n) = wave_I_IV_I_V, int(n) : rdtable; 
 
 // Input parameters
-input_progression = hslider("/input/progression", 0, 0, 10, 1);
-reset = button("/input/reset");
-bpm = hslider("/input/bpm", 118, 30, 180, 0.1);
-key = hslider("/input/key", 0, 0, 11, 1);
-kick_volume = _ * si.smoo(ba.lin2LogGain(hslider("/input/kick/volume", 0, 0, 1, 0.0001)));
-hat_volume = _ * si.smoo(ba.lin2LogGain(hslider("/input/hat/volume", 0, 0, 1, 0.0001)));
-djembe_volume = _ * si.smoo(ba.lin2LogGain(hslider("/input/djembe/volume", 0, 0, 1, 0.0001)));
-marimba_volume = _ * si.smoo(ba.lin2LogGain(hslider("/input/marimba/volume", 0, 0, 1, 0.0001)));
-chords_volume = _ *  si.smoo(ba.lin2LogGain(hslider("/input/chords/volume", 0, 0, 1, 0.0001)));
+input_progression = hslider("progression", 0, 0, 10, 1);
+reset = button("reset");
+bpm = hslider("bpm", 118, 30, 180, 0.1);
+transpose = hslider("transpose", 0, -2, 2, 1) * 12;
+key = hslider("key", 0, 0, 11, 1) + transpose;
+kick_volume = _ * si.smoo(ba.lin2LogGain(hslider("kick/volume", 0.5, 0, 1, 0.0001)));
+hat_volume = _ * si.smoo(ba.lin2LogGain(hslider("hat/volume", 0, 0, 1, 0.0001)));
+djembe_volume = _ * si.smoo(ba.lin2LogGain(hslider("djembe/volume", 0, 0, 1, 0.0001)));
+marimba_volume = _ * si.smoo(ba.lin2LogGain(hslider("marimba/volume", 0, 0, 1, 0.0001)));
+chords_volume = _ *  si.smoo(ba.lin2LogGain(hslider("chords/volume", 0, 0, 1, 0.0001)));
 
 progression(n) = sel_wave(n)
 with {
@@ -85,15 +86,24 @@ with {
     env = en.adsr(0.0001, 0, 1, r, gate);
 };
 
-kick_beat = beat(bpm);
-kick = kick_beat : sy.kick(ba.midikey2hz(key + 12 * 3), 0.05, 0.01, 60/bpm, 1): kick_volume :  sp.panner(0.5);
+// kick_beat = beat(bpm);
+kick_beat = par(i, numSteps, checkbox("step%i")) : ba.selectn(numSteps, ba.counter(gate) % numSteps) : en.adsr(0.001, 60 / speed / 8, 0, 0)
+with {
+    num = i + 1;
+    numSteps = 16;
+    speed = bpm*4;
+    gate = beat(speed);
+};
+kick = kick_beat : sy.kick(ba.midikey2hz(key + 12 * 3), 0.05, 0.01, 60/bpm/4, 1): kick_volume : sp.panner(0.5);
 
 hat_beat = beat(bpm)@ba.tempo(bpm*2);
 hat = hat_beat : sy.hat(317, 12000, 0.005, 0.1) : hat_volume : sp.panner(0.3);
 
 scale(n) = minor_scale(n), major_scale(n) : ba.selectn(2, is_minor);
 
-rand_note = int(7 * (noise + 1)/2) : scale : _ + key;
+// rand_note = int(7 * (noise + 1)/2) : scale : _ + key;
+rand_note = int((os.lf_saw(bpm * 4 / 60) + 1) / 2) : scale : +(key);
+
 
 djembe_beat = (pattern1 + pattern2) * pattern3
 with {
@@ -117,4 +127,4 @@ gate = beat(bpm/8);
 degree_at_step = progression(ba.counter(gate) % 4 + 1);
 chords = triad(degree_at_step, major_scale)  : par(i, 3, _ + key + 12*4) : par(i, 3, ba.midikey2hz) : par(i, 3, filt_tri(gate)) :> (_ + _ + _) / 3 : chords_volume <: reverb(1) <: par(i, 2, fi.highpass(2, 250));
 
-process =  kick, hat, djembe, marimba, chords :> _ / 2, _ / 2;
+process =  kick, hat, djembe, marimba, chords :> _ / 5, _ / 5;
