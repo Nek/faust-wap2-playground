@@ -7,6 +7,7 @@ else
     rm -rf /tmp/dist;
     cp -r dist /tmp/dist;
     echo "<!--" >> /tmp/dist/index.html;
+    git config --get remote.origin.url >> /tmp/dist/index.html;
     cat .git/refs/heads/master >> /tmp/dist/index.html;
     echo "-->" >> /tmp/dist/index.html;
     cd /tmp/dist;
