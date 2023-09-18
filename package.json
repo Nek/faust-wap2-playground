@@ -18,27 +18,27 @@
   },
   "devDependencies": {
     "npm-watch": "^0.11.0",
-    "prettier": "^2.5.1",
-    "typescript": "^4.5.5",
-    "vite": "^2.8.2"
+    "prettier": "^3.0.3",
+    "typescript": "^5.2.2",
+    "vite": "^4.4.9"
   },
   "dependencies": {
-    "@thi.ng/adapt-dpi": "^2.1.6",
-    "@thi.ng/atom": "^5.1.5",
-    "@thi.ng/bench": "^3.1.5",
-    "@thi.ng/defmulti": "^2.1.5",
-    "@thi.ng/geom": "^3.2.2",
-    "@thi.ng/hdom": "^9.1.6",
-    "@thi.ng/hdom-canvas": "^4.1.10",
-    "@thi.ng/hdom-components": "^5.1.7",
-    "@thi.ng/hiccup-carbon-icons": "^3.1.4",
-    "@thi.ng/imgui": "^2.1.10",
-    "@thi.ng/layout": "^2.1.5",
-    "@thi.ng/random": "^3.2.6",
-    "@thi.ng/rstream": "^7.2.4",
-    "@thi.ng/rstream-gestures": "^4.1.6",
-    "@thi.ng/transducers-hdom": "^3.1.7",
-    "@thi.ng/transducers-stats": "^2.1.6",
-    "@thi.ng/vectors": "^7.5.2"
+    "@thi.ng/adapt-dpi": "^2.2.19",
+    "@thi.ng/atom": "^5.2.9",
+    "@thi.ng/bench": "^3.4.6",
+    "@thi.ng/defmulti": "^3.0.0",
+    "@thi.ng/geom": "^5.2.3",
+    "@thi.ng/hdom": "^9.3.20",
+    "@thi.ng/hdom-canvas": "^4.1.78",
+    "@thi.ng/hdom-components": "^5.1.64",
+    "@thi.ng/hiccup-carbon-icons": "^3.1.29",
+    "@thi.ng/imgui": "^2.1.83",
+    "@thi.ng/layout": "^2.1.34",
+    "@thi.ng/random": "^3.6.4",
+    "@thi.ng/rstream": "^8.1.6",
+    "@thi.ng/rstream-gestures": "^5.0.18",
+    "@thi.ng/transducers-hdom": "^3.1.70",
+    "@thi.ng/transducers-stats": "^2.1.64",
+    "@thi.ng/vectors": "^7.7.14"
   }
 }
